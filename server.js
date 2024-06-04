@@ -112,6 +112,40 @@ app.get('/dhanClientId', (req, res) => {
   res.json({ dhanClientId: DHAN_CLIENT_ID });
 });
 
+// New endpoint for Kill Switch
+app.use(express.json()); // Make sure this middleware is used before any routes
+
+app.post('/killSwitch', async (req, res) => {
+  const killSwitchStatus = req.query.killSwitchStatus; // Get from query parameters
+
+  console.log('Received killSwitchStatus:', killSwitchStatus); // Log the received status
+
+  if (!['ACTIVATE', 'DEACTIVATE'].includes(killSwitchStatus)) {
+    return res.status(400).json({ message: 'Invalid killSwitchStatus value. Must be either "ACTIVATE" or "DEACTIVATE".' });
+  }
+
+  const options = {
+    method: 'POST',
+    url: 'https://api.dhan.co/killSwitch',
+    headers: {
+      'access-token': process.env.DHAN_API_TOKEN,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    params: { // Send as query parameters to the Dhan API
+      killSwitchStatus
+    }
+  };
+
+  try {
+    const response = await axios(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Failed to activate Kill Switch:', error);
+    res.status(500).json({ message: 'Failed to activate Kill Switch', error: error.response.data });
+  }
+});
+
 app.listen(3000, () => {
   console.log('Proxy server running on http://localhost:3000');
 });
