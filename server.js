@@ -4,10 +4,21 @@ const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
+const sdk = require('dhanhq'); // Import the DhanHQ SDK
 
 const app = express();
 
 app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // To parse JSON bodies
+
+// Initialize the DhanHQ client
+const ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
+const DHAN_CLIENT_ID = process.env.DHAN_CLIENT_ID;
+
+const client = new sdk.DhanHqClient({
+  accessToken: ACCESS_TOKEN,
+  env: 'DEV'
+});
 
 // Root route to prevent "Cannot GET /" error
 app.get('/', (req, res) => {
@@ -52,6 +63,53 @@ app.get('/fundlimit', async (req, res) => {
     console.error('Failed to fetch fund limit:', error);
     res.status(500).json({ message: 'Failed to fetch fund limit' });
   }
+});
+
+// Route to place an order
+app.post('/placeOrder', async (req, res) => {
+  const { symbol, quantity, orderType, productType, price, validity } = req.body;
+
+  const options = {
+    method: 'POST',
+    url: 'https://api.dhan.co/placeOrder',
+    headers: {
+      'access-token': process.env.DHAN_API_TOKEN,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    data: {
+      symbol,
+      quantity,
+      orderType,
+      productType,
+      price,
+      validity
+    }
+  };
+
+  try {
+    const response = await axios(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error placing order:', error);
+    res.status(500).json({ message: 'Failed to place order' });
+  }
+});
+
+// Example route using the DhanHQ SDK
+app.get('/holdings', async (req, res) => {
+  try {
+    const response = await client.getHoldings();
+    res.json(response);
+  } catch (error) {
+    console.error('Failed to fetch holdings:', error);
+    res.status(500).json({ message: 'Failed to fetch holdings' });
+  }
+});
+
+// New endpoint to fetch DHAN_CLIENT_ID
+app.get('/dhanClientId', (req, res) => {
+  res.json({ dhanClientId: DHAN_CLIENT_ID });
 });
 
 app.listen(3000, () => {
