@@ -146,6 +146,26 @@ app.post('/killSwitch', async (req, res) => {
   }
 });
 
+// Route to get orders
+app.get('/getOrders', async (req, res) => {
+  const options = {
+    method: 'GET',
+    url: 'https://api.dhan.co/orders',
+    headers: {
+      'access-token': process.env.DHAN_API_TOKEN, // Set the API token from environment variables
+      'Accept': 'application/json'
+    }
+  };
+
+  try {
+    const response = await axios(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Failed to fetch orders:', error);
+    res.status(500).json({ message: 'Failed to fetch orders' });
+  }
+});
+
 app.listen(3000, () => {
   console.log('Proxy server running on http://localhost:3000');
 });
