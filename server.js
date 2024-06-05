@@ -71,19 +71,25 @@ app.post('/placeOrder', async (req, res) => {
 
   const options = {
     method: 'POST',
-    url: 'https://api.dhan.co/placeOrder',
+    url: 'https://api.dhan.co/orders',
     headers: {
       'access-token': process.env.DHAN_API_TOKEN,
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
     data: {
-      symbol,
-      quantity,
-      orderType,
-      productType,
-      price,
-      validity
+      "dhanClientId": String(process.env.DHAN_CLIENT_ID), // Explicitly cast to string
+      "transactionType": "BUY",
+      "exchangeSegment": "NSE_FNO",
+      "productType": "INTRADAY",
+      "orderType": "LIMIT",
+      "validity": "DAY",
+      "tradingSymbol": "NIFTY-Jun2024-21700-CE",
+      "securityId": "36957",
+      "quantity": 25,
+      "price": 10,
+      "drvExpiryDate": "2024-06-06 14:30:00",
+      "drvOptionType": "CALL"
     }
   };
 
@@ -165,6 +171,7 @@ app.get('/getOrders', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch orders' });
   }
 });
+
 
 app.listen(3000, () => {
   console.log('Proxy server running on http://localhost:3000');
