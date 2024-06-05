@@ -5,6 +5,8 @@ const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
 const sdk = require('dhanhq'); // Import the DhanHQ SDK
+const fs = require('fs');
+const csv = require('csv-parser');
 
 const app = express();
 
@@ -67,7 +69,7 @@ app.get('/fundlimit', async (req, res) => {
 
 // Route to place an order
 app.post('/placeOrder', async (req, res) => {
-  const { exchangeSegment, symbol, quantity, orderType, productType, price, validity, transactionType, drvOptionType } = req.body;
+  const { exchangeSegment, symbol, quantity, orderType, productType, price, validity, transactionType, drvOptionType, drvExpiryDate } = req.body;
 
   const options = {
     method: 'POST',
@@ -88,7 +90,7 @@ app.post('/placeOrder', async (req, res) => {
       "securityId": "36957",
       "quantity": quantity,
       "price": price,
-      "drvExpiryDate": "2024-06-06 14:30:00",
+      "drvExpiryDate": drvExpiryDate,
       "drvOptionType": drvOptionType // Use the drvOptionType from the request
     }
   };
@@ -172,6 +174,41 @@ app.get('/getOrders', async (req, res) => {
   }
 });
 
+// New route to fetch symbols from CSV
+app.get('/symbols', (req, res) => {
+  const { selectedExchange, masterSymbol } = req.query;
+  const results = [];
+
+  if (!selectedExchange) {
+    return res.status(400).json({ message: 'No selectedExchange provided' });
+  }
+
+  if (!masterSymbol) {
+    return res.status(400).json({ message: 'No masterSymbol provided' });
+  }
+
+  fs.createReadStream('./api-scrip-master.csv')
+    .pipe(csv())
+    .on('data', (data) => {
+      if (data.SEM_EXM_EXCH_ID === selectedExchange &&
+          data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
+          data.SEM_EXCH_INSTRUMENT_TYPE === "OP" &&
+          data.SEM_TRADING_SYMBOL.includes(masterSymbol)) {
+        results.push({
+          tradingSymbol: data.SEM_TRADING_SYMBOL, 
+          drvExpiryDate: data.SEM_EXPIRY_DATE
+        });
+      }
+    })
+    .on('end', () => {
+      console.log('Symbols fetched:', results); // Log the results
+      res.json(results);
+    })
+    .on('error', (error) => {
+      console.error('Error reading CSV file:', error);
+      res.status(500).json({ message: 'Failed to read symbols from CSV' });
+    });
+});
 
 app.listen(3000, () => {
   console.log('Proxy server running on http://localhost:3000');
