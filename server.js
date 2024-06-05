@@ -67,7 +67,7 @@ app.get('/fundlimit', async (req, res) => {
 
 // Route to place an order
 app.post('/placeOrder', async (req, res) => {
-  const { symbol, quantity, orderType, productType, price, validity } = req.body;
+  const { exchangeSegment, symbol, quantity, orderType, productType, price, validity, transactionType, drvOptionType } = req.body;
 
   const options = {
     method: 'POST',
@@ -78,18 +78,18 @@ app.post('/placeOrder', async (req, res) => {
       'Accept': 'application/json'
     },
     data: {
-      "dhanClientId": String(process.env.DHAN_CLIENT_ID), // Explicitly cast to string
-      "transactionType": "BUY",
-      "exchangeSegment": "NSE_FNO",
+      "dhanClientId": String(process.env.DHAN_CLIENT_ID),
+      "transactionType": transactionType, // Use the transactionType from the request
+      "exchangeSegment": exchangeSegment,
       "productType": "INTRADAY",
       "orderType": "LIMIT",
       "validity": "DAY",
-      "tradingSymbol": "NIFTY-Jun2024-21700-CE",
+      "tradingSymbol": symbol,
       "securityId": "36957",
-      "quantity": 25,
-      "price": 10,
+      "quantity": quantity,
+      "price": price,
       "drvExpiryDate": "2024-06-06 14:30:00",
-      "drvOptionType": "CALL"
+      "drvOptionType": drvOptionType // Use the drvOptionType from the request
     }
   };
 
