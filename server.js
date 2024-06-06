@@ -71,6 +71,8 @@ app.get('/fundlimit', async (req, res) => {
 // Modified route to fetch symbols from CSV including securityId
 app.get('/symbols', (req, res) => {
   const { selectedExchange, masterSymbol, drvExpiryDate } = req.query;
+  const callStrikes = [];
+  const putStrikes = [];
   const results = [];
 
   if (!selectedExchange) {
@@ -88,17 +90,28 @@ app.get('/symbols', (req, res) => {
           data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
           data.SEM_EXCH_INSTRUMENT_TYPE === "OP" &&
           data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
-          (!drvExpiryDate || data.SEM_EXPIRY_DATE === drvExpiryDate)) { // Apply drvExpiryDate filter only if provided
-        results.push({
+          (!drvExpiryDate || data.SEM_EXPIRY_DATE === drvExpiryDate)) {
+        const symbolData = {
           tradingSymbol: data.SEM_TRADING_SYMBOL,
           drvExpiryDate: data.SEM_EXPIRY_DATE,
-          securityId: data.SEM_SMST_SECURITY_ID
-        });
+          securityId: data.SEM_SMST_SECURITY_ID,
+          selectedExchange: selectedExchange
+        };
+        results.push(symbolData);
+
+        // Check SEM_OPTION_TYPE and categorize into callStrikes or putStrikes
+        if (data.SEM_OPTION_TYPE.includes('CE')) {
+          callStrikes.push(symbolData);
+        } else if (data.SEM_OPTION_TYPE.includes('PE')) {
+          putStrikes.push(symbolData);
+        }
       }
     })
     .on('end', () => {
       console.log('Symbols fetched:', results); // Log the results
-      res.json(results);
+      console.log('Call Strikes:', callStrikes);
+      console.log('Put Strikes:', putStrikes);
+      res.json({ results, callStrikes, putStrikes });
     })
     .on('error', (error) => {
       console.error('Error reading CSV file:', error);
