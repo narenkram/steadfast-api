@@ -83,27 +83,34 @@ app.get('/symbols', (req, res) => {
     return res.status(400).json({ message: 'No masterSymbol provided' });
   }
 
+  // Function to convert drvExpiryDate from 'yyyy-mm-dd' to '-MonYYYY-'
+  const convertDate = (date) => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dateParts = date.split('-');
+    const year = dateParts[0];
+    const month = monthNames[parseInt(dateParts[1], 10) - 1];
+    return `-${month}${year}-`;
+  };
+
+  const formattedExpiry = drvExpiryDate ? convertDate(drvExpiryDate) : null;
+
   fs.createReadStream('./api-scrip-master.csv')
     .pipe(csv())
     .on('data', (data) => {
-      // Split the SEM_EXPIRY_DATE to remove the time part
-      const dateOnly = data.SEM_EXPIRY_DATE.split(' ')[0];
-
       if (data.SEM_EXM_EXCH_ID === selectedExchange &&
           data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
           (data.SEM_EXCH_INSTRUMENT_TYPE === "OP" || data.SEM_EXCH_INSTRUMENT_TYPE === "OPTIDX") &&
           data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
-          (!drvExpiryDate || dateOnly === drvExpiryDate)) { // Use dateOnly for comparison
+          (!formattedExpiry || data.SEM_TRADING_SYMBOL.includes(formattedExpiry))) { // Check if symbol contains the formatted expiry date if provided
 
         const symbolData = {
           tradingSymbol: data.SEM_TRADING_SYMBOL,
-          drvExpiryDate: dateOnly, // Store only the date part
+          drvExpiryDate: data.SEM_EXPIRY_DATE.split(' ')[0], // Store only the date part
           securityId: data.SEM_SMST_SECURITY_ID,
           selectedExchange: selectedExchange
         };
         results.push(symbolData);
 
-        // Check if the trading symbol starts with the selected masterSymbol followed by a dash
         if (data.SEM_TRADING_SYMBOL.startsWith(masterSymbol + '-')) {
           if (data.SEM_OPTION_TYPE.includes('CE')) {
             callStrikes.push(symbolData);
@@ -114,7 +121,7 @@ app.get('/symbols', (req, res) => {
       }
     })
     .on('end', () => {
-      console.log('Symbols fetched:', results); // Log the results
+      console.log('Symbols fetched:', results);
       console.log('Call Strikes:', callStrikes);
       console.log('Put Strikes:', putStrikes);
       res.json({ results, callStrikes, putStrikes });
