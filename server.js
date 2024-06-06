@@ -212,6 +212,25 @@ app.get('/getOrders', async (req, res) => {
   }
 });
 
+// New route to fetch positions
+app.get('/positions', async (req, res) => {
+  const options = {
+    method: 'GET',
+    url: 'https://api.dhan.co/positions',
+    headers: {
+      'access-token': process.env.DHAN_API_TOKEN, // Use the API token from environment variables
+      'Accept': 'application/json'
+    }
+  };
+
+  try {
+    const response = await axios(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Failed to fetch positions:', error);
+    res.status(500).json({ message: 'Failed to fetch positions' });
+  }
+});
 
 app.listen(3000, () => {
   console.log('Proxy server running on http://localhost:3000');
