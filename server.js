@@ -86,14 +86,18 @@ app.get('/symbols', (req, res) => {
   fs.createReadStream('./api-scrip-master.csv')
     .pipe(csv())
     .on('data', (data) => {
+      // Split the SEM_EXPIRY_DATE to remove the time part
+      const dateOnly = data.SEM_EXPIRY_DATE.split(' ')[0];
+
       if (data.SEM_EXM_EXCH_ID === selectedExchange &&
           data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
           (data.SEM_EXCH_INSTRUMENT_TYPE === "OP" || data.SEM_EXCH_INSTRUMENT_TYPE === "OPTIDX") &&
           data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
-          (!drvExpiryDate || data.SEM_EXPIRY_DATE === drvExpiryDate)) {
+          (!drvExpiryDate || dateOnly === drvExpiryDate)) { // Use dateOnly for comparison
+
         const symbolData = {
           tradingSymbol: data.SEM_TRADING_SYMBOL,
-          drvExpiryDate: data.SEM_EXPIRY_DATE,
+          drvExpiryDate: dateOnly, // Store only the date part
           securityId: data.SEM_SMST_SECURITY_ID,
           selectedExchange: selectedExchange
         };
@@ -137,8 +141,8 @@ app.post('/placeOrder', async (req, res) => {
       "dhanClientId": String(process.env.DHAN_CLIENT_ID),
       "transactionType": transactionType,
       "exchangeSegment": exchangeSegment,
-      "productType": "INTRADAY",
-      "orderType": "LIMIT",
+      "productType": productType,
+      "orderType": orderType,
       "validity": "DAY",
       "tradingSymbol": symbol,
       "securityId": securityId, // Use the securityId from the request
