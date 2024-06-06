@@ -88,7 +88,7 @@ app.get('/symbols', (req, res) => {
     .on('data', (data) => {
       if (data.SEM_EXM_EXCH_ID === selectedExchange &&
           data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
-          data.SEM_EXCH_INSTRUMENT_TYPE === "OP" &&
+          (data.SEM_EXCH_INSTRUMENT_TYPE === "OP" || data.SEM_EXCH_INSTRUMENT_TYPE === "OPTIDX") &&
           data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
           (!drvExpiryDate || data.SEM_EXPIRY_DATE === drvExpiryDate)) {
         const symbolData = {
