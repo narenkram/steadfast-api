@@ -99,11 +99,13 @@ app.get('/symbols', (req, res) => {
         };
         results.push(symbolData);
 
-        // Check SEM_OPTION_TYPE and categorize into callStrikes or putStrikes
-        if (data.SEM_OPTION_TYPE.includes('CE')) {
-          callStrikes.push(symbolData);
-        } else if (data.SEM_OPTION_TYPE.includes('PE')) {
-          putStrikes.push(symbolData);
+        // Check if the trading symbol starts with the selected masterSymbol followed by a dash
+        if (data.SEM_TRADING_SYMBOL.startsWith(masterSymbol + '-')) {
+          if (data.SEM_OPTION_TYPE.includes('CE')) {
+            callStrikes.push(symbolData);
+          } else if (data.SEM_OPTION_TYPE.includes('PE')) {
+            putStrikes.push(symbolData);
+          }
         }
       }
     })
