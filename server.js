@@ -70,7 +70,7 @@ app.get('/fundlimit', async (req, res) => {
 
 // Modified route to fetch symbols from CSV including securityId
 app.get('/symbols', (req, res) => {
-  const { selectedExchange, masterSymbol } = req.query;
+  const { selectedExchange, masterSymbol, drvExpiryDate } = req.query;
   const results = [];
 
   if (!selectedExchange) {
@@ -87,11 +87,12 @@ app.get('/symbols', (req, res) => {
       if (data.SEM_EXM_EXCH_ID === selectedExchange &&
           data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
           data.SEM_EXCH_INSTRUMENT_TYPE === "OP" &&
-          data.SEM_TRADING_SYMBOL.includes(masterSymbol)) {
+          data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
+          (!drvExpiryDate || data.SEM_EXPIRY_DATE === drvExpiryDate)) { // Apply drvExpiryDate filter only if provided
         results.push({
           tradingSymbol: data.SEM_TRADING_SYMBOL,
           drvExpiryDate: data.SEM_EXPIRY_DATE,
-          securityId: data.SEM_SMST_SECURITY_ID // Assuming SEM_SECURITY_ID is the column name for securityId in CSV
+          securityId: data.SEM_SMST_SECURITY_ID
         });
       }
     })
