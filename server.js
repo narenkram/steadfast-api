@@ -85,6 +85,17 @@ app.get("/symbols", (req, res) => {
     return res.status(400).json({ message: "No masterSymbol provided" });
   }
 
+   // Function to convert drvExpiryDate from 'yyyy-mm-dd' to '-MonYYYY-'
+   const convertDate = (date) => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dateParts = date.split('-');
+    const year = dateParts[0];
+    const month = monthNames[parseInt(dateParts[1], 10) - 1];
+    return `-${month}${year}-`;
+  };
+
+  const formattedExpiry = drvExpiryDate ? convertDate(drvExpiryDate) : null;
+
   fs.createReadStream("./api-scrip-master.csv")
     .pipe(csv())
     .on("data", (data) => {
@@ -94,11 +105,11 @@ app.get("/symbols", (req, res) => {
         (data.SEM_EXCH_INSTRUMENT_TYPE === "OP" ||
           data.SEM_EXCH_INSTRUMENT_TYPE === "OPTIDX") &&
         data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
-        (!drvExpiryDate || data.SEM_TRADING_SYMBOL.includes(drvExpiryDate))
+        (!formattedExpiry || data.SEM_TRADING_SYMBOL.includes(formattedExpiry))
       ) {
         const symbolData = {
           tradingSymbol: data.SEM_TRADING_SYMBOL,
-          drvExpiryDate: data.SEM_EXPIRY_DATE,
+          drvExpiryDate: data.SEM_EXPIRY_DATE.split(' ')[0], // Store only the date part
           securityId: data.SEM_SMST_SECURITY_ID,
           selectedExchange: selectedExchange,
         };
