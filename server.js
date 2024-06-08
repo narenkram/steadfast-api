@@ -157,8 +157,21 @@ app.post("/placeOrder", async (req, res) => {
     const response = await axios(options);
     res.json(response.data);
   } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ message: "Failed to place order" });
+    // Check if the error response has data and a message, then send it
+    if (
+      error.response &&
+      error.response.data &&
+      error.response.data.internalErrorMessage
+    ) {
+      res
+        .status(error.response.status)
+        .json({ message: error.response.data.internalErrorMessage });
+    } else {
+      // Fallback if the error response does not contain the expected format
+      res
+        .status(500)
+        .json({ message: "Failed to place order due to an unexpected error" });
+    }
   }
 });
 
