@@ -6,7 +6,7 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 const axios = require("axios");
 const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
-const csv = require("csv-parser");
+const csv = require("fast-csv");
 
 const app = express();
 
@@ -70,69 +70,40 @@ app.get("/fundlimit", async (req, res) => {
   }
 });
 
-// Modified route to fetch symbols from CSV including securityId
 app.get("/symbols", (req, res) => {
-  const { selectedExchange, masterSymbol, drvExpiryDate } = req.query;
+  const { exchangeSymbol, masterSymbol } = req.query;
   const callStrikes = [];
   const putStrikes = [];
-  const results = [];
-
-  if (!selectedExchange) {
-    return res.status(400).json({ message: "No selectedExchange provided" });
-  }
-
-  if (!masterSymbol) {
-    return res.status(400).json({ message: "No masterSymbol provided" });
-  }
-
-   // Function to convert drvExpiryDate from 'yyyy-mm-dd' to '-MonYYYY-'
-   const convertDate = (date) => {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const dateParts = date.split('-');
-    const year = dateParts[0];
-    const month = monthNames[parseInt(dateParts[1], 10) - 1];
-    return `-${month}${year}-`;
-  };
-
-  const formattedExpiry = drvExpiryDate ? convertDate(drvExpiryDate) : null;
+  const expiryDates = new Set();
 
   fs.createReadStream("./api-scrip-master.csv")
-    .pipe(csv())
-    .on("data", (data) => {
-      if (
-        data.SEM_EXM_EXCH_ID === selectedExchange &&
-        data.SEM_INSTRUMENT_NAME === "OPTIDX" &&
-        (data.SEM_EXCH_INSTRUMENT_TYPE === "OP" ||
-          data.SEM_EXCH_INSTRUMENT_TYPE === "OPTIDX") &&
-        data.SEM_TRADING_SYMBOL.includes(masterSymbol) &&
-        (!formattedExpiry || data.SEM_TRADING_SYMBOL.includes(formattedExpiry))
-      ) {
-        const symbolData = {
-          tradingSymbol: data.SEM_TRADING_SYMBOL,
-          drvExpiryDate: data.SEM_EXPIRY_DATE.split(' ')[0], // Store only the date part
-          securityId: data.SEM_SMST_SECURITY_ID,
-          selectedExchange: selectedExchange,
-        };
-        results.push(symbolData);
-
-        if (data.SEM_TRADING_SYMBOL.startsWith(masterSymbol + "-")) {
-          if (data.SEM_OPTION_TYPE.includes("CE")) {
-            callStrikes.push(symbolData);
-          } else if (data.SEM_OPTION_TYPE.includes("PE")) {
-            putStrikes.push(symbolData);
+    .pipe(csv.parse({ headers: true }))
+    .on('data', (row) => {
+      if (row['SEM_EXM_EXCH_ID'] === exchangeSymbol && row['SEM_TRADING_SYMBOL'].startsWith(masterSymbol + '-')) {
+        if (['OPTIDX', 'OP'].includes(row['SEM_EXCH_INSTRUMENT_TYPE'])) {
+          const strikeData = {
+            tradingSymbol: row['SEM_TRADING_SYMBOL'],
+            expiryDate: row['SEM_EXPIRY_DATE'],
+            securityId: row['SEM_SMST_SECURITY_ID']
+          };
+          if (row['SEM_OPTION_TYPE'] === 'CE') {
+            callStrikes.push(strikeData);
+          } else if (row['SEM_OPTION_TYPE'] === 'PE') {
+            putStrikes.push(strikeData);
           }
+          expiryDates.add(row['SEM_EXPIRY_DATE']);
         }
       }
     })
-    .on("end", () => {
-      console.log("Symbols fetched:", results);
-      console.log("Call Strikes:", callStrikes);
-      console.log("Put Strikes:", putStrikes);
-      res.json({ results, callStrikes, putStrikes });
+    .on('end', () => {
+      res.json({
+        callStrikes,
+        putStrikes,
+        expiryDates: Array.from(expiryDates)
+      });
     })
-    .on("error", (error) => {
-      console.error("Error reading CSV file:", error);
-      res.status(500).json({ message: "Failed to read symbols from CSV" });
+    .on('error', (error) => {
+      res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
 
@@ -153,7 +124,7 @@ app.post("/placeOrder", async (req, res) => {
       transactionType,
       exchangeSegment,
       productType,
-      orderType: orderType.toUpperCase(), // Ensure orderType is in uppercase
+      orderType,
       validity,
       tradingSymbol,
       securityId,
