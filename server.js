@@ -78,38 +78,54 @@ app.get("/symbols", (req, res) => {
 
   fs.createReadStream("./api-scrip-master.csv")
     .pipe(csv.parse({ headers: true }))
-    .on('data', (row) => {
-      if (row['SEM_EXM_EXCH_ID'] === exchangeSymbol && row['SEM_TRADING_SYMBOL'].startsWith(masterSymbol + '-')) {
-        if (['OPTIDX', 'OP'].includes(row['SEM_EXCH_INSTRUMENT_TYPE'])) {
+    .on("data", (row) => {
+      if (
+        row["SEM_EXM_EXCH_ID"] === exchangeSymbol &&
+        row["SEM_TRADING_SYMBOL"].startsWith(masterSymbol + "-")
+      ) {
+        if (["OPTIDX", "OP"].includes(row["SEM_EXCH_INSTRUMENT_TYPE"])) {
           const strikeData = {
-            tradingSymbol: row['SEM_TRADING_SYMBOL'],
-            expiryDate: row['SEM_EXPIRY_DATE'],
-            securityId: row['SEM_SMST_SECURITY_ID']
+            tradingSymbol: row["SEM_TRADING_SYMBOL"],
+            expiryDate: row["SEM_EXPIRY_DATE"],
+            securityId: row["SEM_SMST_SECURITY_ID"],
           };
-          if (row['SEM_OPTION_TYPE'] === 'CE') {
+          if (row["SEM_OPTION_TYPE"] === "CE") {
             callStrikes.push(strikeData);
-          } else if (row['SEM_OPTION_TYPE'] === 'PE') {
+          } else if (row["SEM_OPTION_TYPE"] === "PE") {
             putStrikes.push(strikeData);
           }
-          expiryDates.add(row['SEM_EXPIRY_DATE']);
+          expiryDates.add(row["SEM_EXPIRY_DATE"]);
         }
       }
     })
-    .on('end', () => {
+    .on("end", () => {
       res.json({
         callStrikes,
         putStrikes,
-        expiryDates: Array.from(expiryDates)
+        expiryDates: Array.from(expiryDates),
       });
     })
-    .on('error', (error) => {
+    .on("error", (error) => {
       res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
 
 // Modified route to place an order to include securityId from the request
 app.post("/placeOrder", async (req, res) => {
-  const { dhanClientId, transactionType, exchangeSegment, productType, orderType, validity, tradingSymbol, securityId, quantity, price, drvExpiryDate, drvOptionType } = req.body;
+  const {
+    dhanClientId,
+    transactionType,
+    exchangeSegment,
+    productType,
+    orderType,
+    validity,
+    tradingSymbol,
+    securityId,
+    quantity,
+    price,
+    drvExpiryDate,
+    drvOptionType,
+  } = req.body;
 
   const options = {
     method: "POST",
@@ -117,7 +133,7 @@ app.post("/placeOrder", async (req, res) => {
     headers: {
       "access-token": process.env.DHAN_API_TOKEN,
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
     },
     data: {
       dhanClientId,
