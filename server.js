@@ -7,10 +7,25 @@ const axios = require("axios");
 const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
+const redis = require("redis");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173', // Replace with your frontend's URL
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+const redisClient = redis.createClient();
 
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({
+  origin: 'http://localhost:5173', // Replace with your frontend's URL
+  credentials: true
+})); // Enable CORS for your frontend's origin
 app.use(express.json()); // To parse JSON bodies
 
 // Initialize the DhanHQ client
@@ -272,6 +287,17 @@ app.get("/positions", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
+// Subscribe to Redis channel
+redisClient.subscribe('market_feed');
+redisClient.on('message', (channel, message) => {
+  if (channel === 'market_feed') {
+    const data = JSON.parse(message);
+    console.log("Received data from market feed:", data);
+    // Handle the data as needed
+    io.emit('market_feed', data); // Emit the data to connected clients
+  }
+});
+
+server.listen(3000, () => {
   console.log("Proxy server running on http://localhost:3000");
 });
