@@ -288,14 +288,50 @@ app.get("/positions", async (req, res) => {
 });
 
 // Subscribe to Redis channel
-redisClient.subscribe('market_feed');
+redisClient.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
+
+redisClient.on('connect', () => {
+  console.log('Connected to Redis');
+  redisClient.subscribe('market_feed', (err, count) => {
+    if (err) {
+      console.error('Failed to subscribe: %s', err.message);
+    } else {
+      console.log(`Subscribed successfully! This client is currently subscribed to ${count} channels.`);
+    }
+  });
+});
+
 redisClient.on('message', (channel, message) => {
   if (channel === 'market_feed') {
     const data = JSON.parse(message);
     console.log("Received data from market feed:", data);
-    // Handle the data as needed
-    io.emit('market_feed', data); // Emit the data to connected clients
+
+    // Emit the data to the specific channel
+    const { exchange_segment, security_id } = data;
+    const specificChannel = `${exchange_segment}_${security_id}`;
+    console.log(`Emitting to channel: ${specificChannel}`);
+    io.to(specificChannel).emit('market_feed', data);
   }
+});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('subscribe', (channel) => {
+    console.log(`Subscribing to channel: ${channel}`);
+    socket.join(channel);
+  });
+
+  socket.on('unsubscribe', (channel) => {
+    console.log(`Unsubscribing from channel: ${channel}`);
+    socket.leave(channel);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
 });
 
 server.listen(3000, () => {
