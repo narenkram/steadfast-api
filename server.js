@@ -275,6 +275,32 @@ app.get("/positions", async (req, res) => {
   }
 });
 
+// New route to cancel an order
+app.delete("/cancelOrder", async (req, res) => {
+  const { orderId } = req.body;
+
+  if (!orderId) {
+    return res.status(400).json({ message: "orderId is required" });
+  }
+
+  const options = {
+    method: "DELETE",
+    url: `https://api.dhan.co/orders/${orderId}`,
+    headers: {
+      "access-token": process.env.DHAN_API_TOKEN,
+      Accept: "application/json",
+    },
+  };
+
+  try {
+    const { data } = await axios.request(options);
+    res.json(data);
+  } catch (error) {
+    console.error("Failed to cancel order:", error);
+    res.status(500).json({ message: "Failed to cancel order" });
+  }
+});
+
 app.listen(3000, () => {
   console.log("Proxy server running on http://localhost:3000");
 });
