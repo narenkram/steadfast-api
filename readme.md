@@ -9,3 +9,9 @@ node server.js
 The application will be available at http://localhost:3000.
 
 ## Get your API Key from DhanHQ and replace API Key in steadfast-stoic-api/.env 
+
+[Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
+
+# Join Our Telegram Channel
+
+Stay updated by joining our [Telegram Channel](https://t.me/steadfaststoic).
