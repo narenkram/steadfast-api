@@ -7,3 +7,5 @@ npm install
 node server.js
 ```
 The application will be available at http://localhost:3000.
+
+## Get your API Key from DhanHQ and replace API Key in steadfast-stoic-api/.env 
