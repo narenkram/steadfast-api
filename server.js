@@ -149,7 +149,7 @@ app.get("/symbols", (req, res) => {
 // Modified route to place an order to include securityId from the request
 app.post("/placeOrder", async (req, res) => {
   const {
-    dhanClientId,
+    brokerClientId,
     transactionType,
     exchangeSegment,
     productType,
@@ -172,7 +172,7 @@ app.post("/placeOrder", async (req, res) => {
       Accept: "application/json",
     },
     data: {
-      dhanClientId,
+      brokerClientId,
       transactionType,
       exchangeSegment,
       productType,
@@ -222,9 +222,9 @@ app.get("/holdings", async (req, res) => {
   }
 });
 
-// New endpoint to fetch DHAN_CLIENT_ID
-app.get("/dhanClientId", (req, res) => {
-  res.json({ dhanClientId: DHAN_CLIENT_ID });
+// New endpoint to fetch Broker Client ID
+app.get("/brokerClientId", (req, res) => {
+  res.json({ brokerClientId: brokers.brokerClientId });
 });
 
 // New endpoint for Kill Switch
