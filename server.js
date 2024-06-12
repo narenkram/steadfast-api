@@ -199,9 +199,9 @@ app.post("/placeOrder", async (req, res) => {
   }
 });
 
-// Route to handle the redirection and send the request_code back to the parent window
+// Route to handle the redirection and send the code back to the parent window
 app.get("/redirect", (req, res) => {
-  const requestCode = req.query.request_code;
+  const requestCode = req.query.code;
   const client = req.query.client;
 
   console.log("Received request code:", requestCode);
@@ -351,9 +351,9 @@ app.get("/?", (req, res) => {
 });
 
 // Serve the redirect.html file
-app.get('/redirect', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
-});
+// app.get('/redirect', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
+// });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
