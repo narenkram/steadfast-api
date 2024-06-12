@@ -7,6 +7,7 @@ const axios = require("axios");
 const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
+const path = require('path');
 
 const app = express();
 
@@ -347,6 +348,11 @@ app.get("/?", (req, res) => {
   } else {
     res.status(400).json({ message: "Invalid request" });
   }
+});
+
+// Serve the redirect.html file
+app.get('/redirect', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
 });
 
 const PORT = process.env.PORT || 3000;
