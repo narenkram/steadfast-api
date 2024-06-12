@@ -36,7 +36,7 @@ const brokers = [
     brokerName: "Dhan",
     appId: "dhan-app-id",
     apiKey: DHAN_ACCESS_TOKEN,
-    apiSecret: "dhan-api-secret",
+    apiSecret: DHAN_ACCESS_TOKEN,
     status: "Active",
     lastTokenGeneratedAt: "2023-10-01T12:00:00Z",
     addedAt: "2023-09-01T12:00:00Z",
