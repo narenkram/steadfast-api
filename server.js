@@ -193,22 +193,27 @@ app.post("/placeOrder", async (req, res) => {
     const response = await axios(options);
     res.json(response.data);
   } catch (error) {
-    // Check if the error response has data and a message, then send it
-    if (
-      error.response &&
-      error.response.data &&
-      error.response.data.internalErrorMessage
-    ) {
-      res
-        .status(error.response.status)
-        .json({ message: error.response.data.internalErrorMessage });
-    } else {
-      // Fallback if the error response does not contain the expected format
-      res
-        .status(500)
-        .json({ message: "Failed to place order due to an unexpected error" });
-    }
+    console.error("Failed to place order:", error);
+    res.status(500).json({ message: "Failed to place order" });
   }
+});
+
+// Route to handle the redirection and send the request_code back to the parent window
+app.get("/redirect", (req, res) => {
+  const requestCode = req.query.request_code;
+  const client = req.query.client;
+
+  console.log("Received request code:", requestCode);
+  console.log("Received client:", client);
+
+  // Send the request_code back to the parent window
+  res.send(`
+    <script>
+      console.log('Sending message to parent window');
+      window.opener.postMessage('${req.protocol}://${req.get('host')}${req.originalUrl}', 'http://localhost:5173');
+      window.close();
+    </script>
+  `);
 });
 
 // Example route using the DhanHQ SDK
@@ -334,6 +339,17 @@ app.delete("/cancelOrder", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Proxy server running on http://localhost:3000");
+// New route to handle the redirection and send the request_code back to the parent window
+app.get("/?", (req, res) => {
+  const { code, client } = req.query;
+  if (code && client) {
+    res.json({ code, client });
+  } else {
+    res.status(400).json({ message: "Invalid request" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
