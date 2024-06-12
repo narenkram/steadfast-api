@@ -10,19 +10,52 @@ const csv = require("fast-csv");
 
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:5173', // Replace with your frontend's URL
-  credentials: true
-})); // Enable CORS for your frontend's origin
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Replace with your frontend's URL
+    credentials: true,
+  })
+); // Enable CORS for your frontend's origin
 app.use(express.json()); // To parse JSON bodies
 
-// Initialize the DhanHQ client
-const ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
+// Broker API Keys & Client IDs
+const DHAN_ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
 const DHAN_CLIENT_ID = String(process.env.DHAN_CLIENT_ID);
+const FLATTRADE_CLIENT_ID = String(process.env.FLATTRADE_CLIENT_ID);
+const FLATTRADE_API_KEY = String(process.env.FLATTRADE_API_KEY);
+const FLATTRADE_API_SECRET = String(process.env.FLATTRADE_API_SECRET);
 
 const client = new sdk.DhanHqClient({
-  accessToken: ACCESS_TOKEN,
+  accessToken: DHAN_ACCESS_TOKEN,
   env: "DEV",
+});
+
+const brokers = [
+  {
+    brokerClientId: DHAN_CLIENT_ID,
+    brokerName: "Dhan",
+    appId: "dhan-app-id",
+    apiKey: DHAN_ACCESS_TOKEN,
+    apiSecret: "dhan-api-secret",
+    status: "Active",
+    lastTokenGeneratedAt: "2023-10-01T12:00:00Z",
+    addedAt: "2023-09-01T12:00:00Z",
+  },
+  {
+    brokerClientId: FLATTRADE_CLIENT_ID,
+    brokerName: "Flattrade",
+    appId: "flattrade-app-id",
+    apiKey: FLATTRADE_API_KEY,
+    apiSecret: FLATTRADE_API_SECRET,
+    status: "Active",
+    lastTokenGeneratedAt: "2023-10-01T12:00:00Z",
+    addedAt: "2023-09-01T12:00:00Z",
+  },
+  // Add more brokers as needed
+];
+
+app.get("/brokers", (req, res) => {
+  res.json(brokers);
 });
 
 // Root route to prevent "Cannot GET /" error
