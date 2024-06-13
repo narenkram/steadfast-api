@@ -356,6 +356,11 @@ app.get("/?", (req, res) => {
   }
 });
 
+// Serve the redirect.html file
+// app.get('/redirect', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
+// });
+
 // Endpoint to exchange request_code for token
 app.post('/api/exchange-code', async (req, res) => {
   const { api_key, request_code, api_secret } = req.body;
