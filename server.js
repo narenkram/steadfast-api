@@ -199,7 +199,7 @@ app.post("/placeOrder", async (req, res) => {
   }
 });
 
-// Route to handle the redirection and send the code back to the parent window
+// Route to handle the redirection and send the request_code back to the parent window
 app.get("/redirect", (req, res) => {
   const requestCode = req.query.code;
   const client = req.query.client;
@@ -207,11 +207,16 @@ app.get("/redirect", (req, res) => {
   console.log("Received request code:", requestCode);
   console.log("Received client:", client);
 
+  if (!requestCode || !client) {
+    res.status(400).send('Invalid request: Missing request code or client');
+    return;
+  }
+
   // Send the request_code back to the parent window
   res.send(`
     <script>
       console.log('Sending message to parent window');
-      window.opener.postMessage('${req.protocol}://${req.get('host')}${req.originalUrl}', 'http://localhost:5173');
+      window.opener.postMessage('${req.protocol}://${req.get('host')}/redirect?request_code=${requestCode}&client=${client}', 'http://localhost:5173');
       window.close();
     </script>
   `);
