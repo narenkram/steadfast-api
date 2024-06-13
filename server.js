@@ -8,6 +8,7 @@ const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -359,6 +360,39 @@ app.get("/?", (req, res) => {
 // app.get('/redirect', (req, res) => {
 //   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
 // });
+
+// Endpoint to exchange request_code for token
+app.post('/api/exchange-code', async (req, res) => {
+  const { api_key, request_code, api_secret } = req.body;
+
+  const concatenatedValue = `${api_key}${request_code}${api_secret}`;
+  const hashedSecret = crypto.SHA256(concatenatedValue).toString();
+
+  try {
+    const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', {
+      api_key,
+      request_code,
+      api_secret: hashedSecret,
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const token = response.data.token; // Adjust this based on the actual response structure
+    if (token) {
+      console.log('Token:', token);
+      // Store the token as needed
+      res.json({ token });
+    } else {
+      console.error('Token not found in response');
+      res.status(500).json({ message: 'Failed to obtain token.' });
+    }
+  } catch (error) {
+    console.error('Failed to generate token:', error);
+    res.status(500).json({ message: 'Failed to obtain token.' });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
