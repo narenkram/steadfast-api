@@ -7,8 +7,8 @@ const axios = require("axios");
 const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
-const path = require('path');
-const bodyParser = require('body-parser'); // Import body-parser
+const path = require("path");
+const bodyParser = require("body-parser"); // Import body-parser
 
 const app = express();
 
@@ -210,7 +210,7 @@ app.get("/redirect", (req, res) => {
   console.log("Received client:", client);
 
   if (!requestCode || !client) {
-    res.status(400).send('Invalid request: Missing request code or client');
+    res.status(400).send("Invalid request: Missing request code or client");
     return;
   }
 
@@ -218,7 +218,9 @@ app.get("/redirect", (req, res) => {
   res.send(`
     <script>
       console.log('Sending message to parent window');
-      window.opener.postMessage('${req.protocol}://${req.get('host')}/redirect?request_code=${requestCode}&client=${client}', 'http://localhost:5173');
+      window.opener.postMessage('${req.protocol}://${req.get(
+    "host"
+  )}/redirect?request_code=${requestCode}&client=${client}', 'http://localhost:5173');
       window.close();
     </script>
   `);
@@ -364,49 +366,51 @@ app.get("/?", (req, res) => {
 
 // New route to proxy requests to Flattrade API
 app.use(express.json());
-app.post('/api/trade/apitoken', async (req, res) => {
+app.post("/api/trade/apitoken", async (req, res) => {
   try {
-    const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', req.body, {
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await axios.post(
+      "https://authapi.flattrade.in/trade/apitoken",
+      req.body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// New route to generate token for Flattrade API
-app.post('/api/generate-token', async (req, res) => {
+// New route to exchange request code for token for Flattrade API
+app.post("/api/exchange-request-code-for-token", async (req, res) => {
   const { apiKey, requestCode, apiSecret } = req.body;
 
   if (!apiKey || !requestCode || !apiSecret) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+    return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  try {
-    const concatenatedValue = `${apiKey}${requestCode}${apiSecret}`;
-    const hashedSecret = crypto.SHA256(concatenatedValue).toString();
-
-    const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', {
+  const response = await axios.post(
+    "https://authapi.flattrade.in/trade/apitoken",
+    {
       api_key: apiKey,
       request_code: requestCode,
-      api_secret: hashedSecret,
-    }, {
+      api_secret: apiSecret,
+    },
+    {
       headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
-    res.json(response.data);
-  } catch (error) {
-    console.error('Failed to generate token:', error);
-    res.status(500).json({ error: 'Failed to generate token' });
-  }
+  res.json(response.data);
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
