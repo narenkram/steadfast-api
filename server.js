@@ -1,37 +1,41 @@
-require("dotenv").config(); // This line loads the environment variables from the .env file
-
 const express = require("express");
 const cors = require("cors");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const axios = require("axios");
-const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
 const path = require("path");
-const bodyParser = require("body-parser"); // Import body-parser
+const bodyParser = require("body-parser");
 
 const app = express();
 
+// Enable fucking CORS for your frontend's origin
 app.use(
   cors({
-    origin: "http://localhost:5173", // Replace with your frontend's URL
+    origin: "http://localhost:5173",
     credentials: true,
   })
-); // Enable CORS for your frontend's origin
-app.use(express.json()); // To parse JSON bodies
-app.use(bodyParser.json()); // Use body-parser middleware
+);
 
-// Broker API Keys & Client IDs
+app.use(express.json());
+app.use(bodyParser.json());
+
+// Root route to prevent "Cannot GET /" error
+app.get("/", (req, res) => {
+  res.send("Welcome to the Proxy Server");
+});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+require("dotenv").config();
+// All Brokers API Keys, Client IDs, Secret IDs
 const DHAN_ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
 const DHAN_CLIENT_ID = String(process.env.DHAN_CLIENT_ID);
 const FLATTRADE_CLIENT_ID = String(process.env.FLATTRADE_CLIENT_ID);
 const FLATTRADE_API_KEY = String(process.env.FLATTRADE_API_KEY);
 const FLATTRADE_API_SECRET = String(process.env.FLATTRADE_API_SECRET);
-
-const client = new sdk.DhanHqClient({
-  accessToken: DHAN_ACCESS_TOKEN,
-  env: "DEV",
-});
 
 const brokers = [
   {
@@ -61,12 +65,23 @@ app.get("/brokers", (req, res) => {
   res.json(brokers);
 });
 
-// Root route to prevent "Cannot GET /" error
-app.get("/", (req, res) => {
-  res.send("Welcome to the Proxy Server");
-});
+// All Flattrade API Endpoints
 
-// Proxy configuration for Dhan API
+// Broker Flattrade - Proxy configuration for Flattrade API
+app.use(
+  "/flattradeApi",
+  createProxyMiddleware({
+    target: "https://authapi.flattrade.in",
+    changeOrigin: true,
+    pathRewrite: {
+      "^/flattradeApi": "", // remove /flattradeApi prefix when forwarding to target
+    },
+  })
+);
+
+// All Dhan API Endpoints
+
+// Broker Dhan - Proxy configuration for Dhan API
 app.use(
   "/api",
   createProxyMiddleware({
@@ -90,14 +105,14 @@ app.use(
   })
 );
 
-// Custom route to handle API requests and bypass CORS
+// Broker Dhan - Custom route to handle Dhan API requests
 app.get("/fundlimit", async (req, res) => {
   try {
     const options = {
       method: "GET",
       url: "https://api.dhan.co/fundlimit",
       headers: {
-        "access-token": process.env.DHAN_API_TOKEN, // Set the API token from environment variables
+        "access-token": process.env.DHAN_API_TOKEN,
         Accept: "application/json",
       },
     };
@@ -149,7 +164,7 @@ app.get("/symbols", (req, res) => {
     });
 });
 
-// Modified route to place an order to include securityId from the request
+// Broker Dhan - Route to place an order to include securityId from the request
 app.post("/placeOrder", async (req, res) => {
   const {
     brokerClientId,
@@ -201,50 +216,12 @@ app.post("/placeOrder", async (req, res) => {
   }
 });
 
-// Route to handle the redirection and send the request_code back to the parent window
-app.get("/redirect", (req, res) => {
-  const requestCode = req.query.code;
-  const client = req.query.client;
-
-  console.log("Received request code:", requestCode);
-  console.log("Received client:", client);
-
-  if (!requestCode || !client) {
-    res.status(400).send("Invalid request: Missing request code or client");
-    return;
-  }
-
-  // Send the request_code back to the parent window
-  res.send(`
-    <script>
-      console.log('Sending message to parent window');
-      window.opener.postMessage('${req.protocol}://${req.get(
-    "host"
-  )}/redirect?request_code=${requestCode}&client=${client}', 'http://localhost:5173');
-      window.close();
-    </script>
-  `);
-});
-
-// Example route using the DhanHQ SDK
-app.get("/holdings", async (req, res) => {
-  try {
-    const response = await client.getHoldings();
-    res.json(response);
-  } catch (error) {
-    console.error("Failed to fetch holdings:", error);
-    res.status(500).json({ message: "Failed to fetch holdings" });
-  }
-});
-
-// New endpoint to fetch Broker Client ID
+// Broker Dhan - Endpoint to fetch Broker Client ID
 app.get("/brokerClientId", (req, res) => {
   res.json({ brokerClientId: brokers.brokerClientId });
 });
 
-// New endpoint for Kill Switch
-app.use(express.json()); // Make sure this middleware is used before any routes
-
+// Broker Dhan - Endpoint for Kill Switch
 app.post("/killSwitch", async (req, res) => {
   const killSwitchStatus = req.query.killSwitchStatus; // Get from query parameters
 
@@ -283,7 +260,7 @@ app.post("/killSwitch", async (req, res) => {
   }
 });
 
-// Route to get orders
+// Broker Dhan - Route to get orders
 app.get("/getOrders", async (req, res) => {
   const options = {
     method: "GET",
@@ -303,7 +280,7 @@ app.get("/getOrders", async (req, res) => {
   }
 });
 
-// New route to fetch positions
+// Broker Dhan - Route to fetch positions
 app.get("/positions", async (req, res) => {
   const options = {
     method: "GET",
@@ -323,7 +300,7 @@ app.get("/positions", async (req, res) => {
   }
 });
 
-// New route to cancel an order
+// Broker Dhan - Route to cancel an order
 app.delete("/cancelOrder", async (req, res) => {
   const { orderId } = req.body;
 
@@ -348,69 +325,3 @@ app.delete("/cancelOrder", async (req, res) => {
     res.status(500).json({ message: "Failed to cancel order" });
   }
 });
-
-// New route to handle the redirection and send the request_code back to the parent window
-app.get("/?", (req, res) => {
-  const { code, client } = req.query;
-  if (code && client) {
-    res.json({ code, client });
-  } else {
-    res.status(400).json({ message: "Invalid request" });
-  }
-});
-
-// Serve the redirect.html file
-// app.get('/redirect', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
-// });
-
-// New route to proxy requests to Flattrade API
-app.use(express.json());
-app.post("/api/trade/apitoken", async (req, res) => {
-  try {
-    const response = await axios.post(
-      "https://authapi.flattrade.in/trade/apitoken",
-      req.body,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// New route to exchange request code for token for Flattrade API
-app.post("/api/exchange-request-code-for-token", async (req, res) => {
-  const { apiKey, requestCode, apiSecret } = req.body;
-
-  if (!apiKey || !requestCode || !apiSecret) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
-
-  const response = await axios.post(
-    "https://authapi.flattrade.in/trade/apitoken",
-    {
-      api_key: apiKey,
-      request_code: requestCode,
-      api_secret: apiSecret,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  res.json(response.data);
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-
