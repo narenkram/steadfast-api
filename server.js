@@ -8,6 +8,7 @@ const sdk = require("dhanhq"); // Import the DhanHQ SDK
 const fs = require("fs");
 const csv = require("fast-csv");
 const path = require('path');
+const bodyParser = require('body-parser'); // Import body-parser
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(
   })
 ); // Enable CORS for your frontend's origin
 app.use(express.json()); // To parse JSON bodies
+app.use(bodyParser.json()); // Use body-parser middleware
 
 // Broker API Keys & Client IDs
 const DHAN_ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
@@ -372,6 +374,35 @@ app.post('/api/trade/apitoken', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// New route to generate token for Flattrade API
+app.post('/api/generate-token', async (req, res) => {
+  const { apiKey, requestCode, apiSecret } = req.body;
+
+  if (!apiKey || !requestCode || !apiSecret) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  try {
+    const concatenatedValue = `${apiKey}${requestCode}${apiSecret}`;
+    const hashedSecret = crypto.SHA256(concatenatedValue).toString();
+
+    const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', {
+      api_key: apiKey,
+      request_code: requestCode,
+      api_secret: hashedSecret,
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Failed to generate token:', error);
+    res.status(500).json({ error: 'Failed to generate token' });
   }
 });
 
