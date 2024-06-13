@@ -360,6 +360,21 @@ app.get("/?", (req, res) => {
 //   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
 // });
 
+// New route to proxy requests to Flattrade API
+app.use(express.json());
+app.post('/api/trade/apitoken', async (req, res) => {
+  try {
+    const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', req.body, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
