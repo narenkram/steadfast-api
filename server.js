@@ -360,10 +360,17 @@ app.get("/?", (req, res) => {
 app.post('/api/exchange-code', async (req, res) => {
   const { api_key, request_code, api_secret } = req.body;
 
+  console.log('Received request to exchange code for token');
+  console.log('API Key:', api_key);
+  console.log('Request Code:', request_code);
+  console.log('API Secret:', api_secret);
+
   const concatenatedValue = `${api_key}${request_code}${api_secret}`;
   const hashedSecret = crypto.SHA256(concatenatedValue).toString();
+  console.log('Generated hashed secret:', hashedSecret);
 
   try {
+    console.log('Server Making POST exchange to Flattrade API using request code' + request_code);
     const response = await axios.post('https://authapi.flattrade.in/trade/apitoken', {
       api_key,
       request_code,
@@ -373,6 +380,8 @@ app.post('/api/exchange-code', async (req, res) => {
         'Content-Type': 'application/json'
       }
     });
+
+    console.log('Response from Flattrade API:', response.data);
 
     const token = response.data.token; // Adjust this based on the actual response structure
     if (token) {
