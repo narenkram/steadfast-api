@@ -78,6 +78,24 @@ app.use(
     },
   })
 );
+// Broker Flattrade - Get Funds
+app.post("/flattradeFundLimit", async (req, res) => {
+  const jKey = req.query.generatedToken || req.query.token;
+  const jData = JSON.stringify({ uid: 'FT014523', actid: 'FT014523' });
+  const payload = `jKey=${jKey}&jData=${jData}`;
+
+  try {
+    const response = await axios.post('https://piconnect.flattrade.in/PiConnectTP/Limits', payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching fund limits:', error);
+    res.status(500).json({ message: 'Error fetching fund limits', error: error.message });
+  }
+});
 
 // All Dhan API Endpoints
 
@@ -105,8 +123,8 @@ app.use(
   })
 );
 
-// Broker Dhan - Custom route to handle Dhan API requests
-app.get("/fundlimit", async (req, res) => {
+// Broker Dhan - Get Funds
+app.get("/dhanFundLimit", async (req, res) => {
   try {
     const options = {
       method: "GET",
