@@ -65,8 +65,13 @@ app.get("/brokers", (req, res) => {
   res.json(brokers);
 });
 
-// All Flattrade API Endpoints
-
+// Send Credentials for Manage Brokers
+app.get('/api/flattrade-credentials', (req, res) => {
+  res.json({
+    apiKey: FLATTRADE_API_KEY,
+    apiSecret: FLATTRADE_API_SECRET,
+  });
+});
 // Broker Flattrade - Proxy configuration for Flattrade API
 app.use(
   "/flattradeApi",
