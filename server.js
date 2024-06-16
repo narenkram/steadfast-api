@@ -216,11 +216,6 @@ app.post("/placeOrder", async (req, res) => {
   }
 });
 
-// Broker Dhan - Endpoint to fetch Broker Client ID
-app.get("/brokerClientId", (req, res) => {
-  res.json({ brokerClientId: brokers.brokerClientId });
-});
-
 // Broker Dhan - Endpoint for Kill Switch
 app.post("/killSwitch", async (req, res) => {
   const killSwitchStatus = req.query.killSwitchStatus; // Get from query parameters
