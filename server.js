@@ -105,16 +105,15 @@ app.post("/flattradeFundLimit", async (req, res) => {
 // Broker Flattrade - Route to place an order to include securityId from the request
 app.post("/flattradePlaceOrder", async (req, res) => {
   const {
-    uid = FLATTRADE_CLIENT_ID,
-    actid = FLATTRADE_CLIENT_ID,
-    exch,
-    tsym,
-    qty,
-    prc,
-    prd,
-    trantype,
-    prctyp,
-    ret
+    brokerClientId,
+    transactionType,
+    exchangeSegment,
+    productType,
+    orderType,
+    validity,
+    tradingSymbol,
+    quantity,
+    price,
   } = req.body;
 
   const jKey = req.query.generatedToken || req.query.token;
@@ -124,16 +123,16 @@ app.post("/flattradePlaceOrder", async (req, res) => {
   }
 
   const jData = JSON.stringify({
-    uid,
-    actid,
-    exch,
-    tsym,
-    qty,
-    prc,
-    prd,
-    trantype,
-    prctyp,
-    ret
+    uid: brokerClientId,
+    actid: brokerClientId,
+    exch: exchangeSegment,
+    tsym: tradingSymbol,
+    qty: quantity,
+    prc: price,
+    prd: productType,
+    trantype: transactionType,
+    prctyp: orderType,
+    ret: validity
   });
 
   // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
@@ -393,3 +392,4 @@ app.delete("/cancelOrder", async (req, res) => {
     res.status(500).json({ message: "Failed to cancel order" });
   }
 });
+
