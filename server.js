@@ -65,6 +65,7 @@ app.get("/brokers", (req, res) => {
   res.json(brokers);
 });
 
+// All Flattrade API Endpoints
 // Send Credentials for Manage Brokers
 app.get('/api/flattrade-credentials', (req, res) => {
   res.json({
@@ -101,9 +102,58 @@ app.post("/flattradeFundLimit", async (req, res) => {
     res.status(500).json({ message: 'Error fetching fund limits', error: error.message });
   }
 });
+// Broker Flattrade - Route to place an order to include securityId from the request
+app.post("/flattradePlaceOrder", async (req, res) => {
+  const {
+    uid = FLATTRADE_CLIENT_ID,
+    actid = FLATTRADE_CLIENT_ID,
+    exch,
+    tsym,
+    qty,
+    prc,
+    prd,
+    trantype,
+    prctyp,
+    ret
+  } = req.body;
+
+  const jKey = req.query.generatedToken || req.query.token;
+
+  if (!jKey) {
+    return res.status(400).json({ message: 'Token is missing. Please generate a token first.' });
+  }
+
+  const jData = JSON.stringify({
+    uid,
+    actid,
+    exch,
+    tsym,
+    qty,
+    prc,
+    prd,
+    trantype,
+    prctyp,
+    ret
+  });
+
+  // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
+  const payload = `jKey=${jKey}&jData=${jData}`;
+
+  try {
+    const response = await axios.post('https://piconnect.flattrade.in/PiConnectTP/PlaceOrder', payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error placing order:', error);
+    res.status(500).json({ message: 'Error placing order', error: error.message });
+  }
+});
+
 
 // All Dhan API Endpoints
-
 // Broker Dhan - Proxy configuration for Dhan API
 app.use(
   "/api",
@@ -188,7 +238,7 @@ app.get("/symbols", (req, res) => {
 });
 
 // Broker Dhan - Route to place an order to include securityId from the request
-app.post("/placeOrder", async (req, res) => {
+app.post("/dhanPlaceOrder", async (req, res) => {
   const {
     brokerClientId,
     transactionType,
