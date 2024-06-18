@@ -19,6 +19,7 @@ app.use(
 
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // Add this line to parse URL-encoded data
 
 // Root route to prevent "Cannot GET /" error
 app.get("/", (req, res) => {
@@ -105,34 +106,35 @@ app.post("/flattradeFundLimit", async (req, res) => {
 // Broker Flattrade - Route to place an order to include securityId from the request
 app.post("/flattradePlaceOrder", async (req, res) => {
   const {
-    brokerClientId,
-    transactionType,
-    exchangeSegment,
-    productType,
-    orderType,
-    validity,
-    tradingSymbol,
-    quantity,
-    price,
+    uid,
+    actid,
+    exch,
+    tsym,
+    qty,
+    prc,
+    prd,
+    trantype,
+    prctyp,
+    ret
   } = req.body;
 
-  const jKey = req.query.generatedToken || req.query.token;
+  const jKey = req.headers.authorization?.split(' ')[1];
 
   if (!jKey) {
     return res.status(400).json({ message: 'Token is missing. Please generate a token first.' });
   }
 
   const jData = JSON.stringify({
-    uid: brokerClientId,
-    actid: brokerClientId,
-    exch: exchangeSegment,
-    tsym: tradingSymbol,
-    qty: quantity,
-    prc: price,
-    prd: productType,
-    trantype: transactionType,
-    prctyp: orderType,
-    ret: validity
+    uid,
+    actid,
+    exch,
+    tsym,
+    qty,
+    prc,
+    prd,
+    trantype,
+    prctyp,
+    ret
   });
 
   // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
