@@ -175,7 +175,8 @@ app.get("/flattradeSymbols", (req, res) => {
           putStrikes.push(strikeData);
         }
         const parsedExpiryDate = parse(row["Expiry"], 'dd-MMM-yyyy', new Date());
-        expiryDates.add(parsedExpiryDate.toISOString());
+        const formattedExpiryDate = parsedExpiryDate.toISOString().split('T')[0]; // Remove the time part
+        expiryDates.add(formattedExpiryDate);
       }
     })
     .on("end", () => {
