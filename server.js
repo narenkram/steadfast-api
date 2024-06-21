@@ -391,7 +391,7 @@ app.get("/getOrders", async (req, res) => {
 });
 
 // Broker Dhan - Route to fetch positions
-app.get("/positions", async (req, res) => {
+app.get("/dhanPositions", async (req, res) => {
   const options = {
     method: "GET",
     url: "https://api.dhan.co/positions",
