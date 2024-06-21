@@ -163,11 +163,11 @@ app.get("/flattradeSymbols", (req, res) => {
   fs.createReadStream("./Nfo_Index_Derivatives.csv")
     .pipe(csv.parse({ headers: true }))
     .on("data", (row) => {
-      console.log("Row data:", row); // Log each row to see the data being read
       if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
         const strikeData = {
           tradingSymbol: row["Tradingsymbol"],
           optionType: row["Optiontype"],
+          securityId: row["Token"]
         };
         if (row["Optiontype"] === "CE") {
           callStrikes.push(strikeData);
