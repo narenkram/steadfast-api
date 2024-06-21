@@ -6,6 +6,7 @@ const fs = require("fs");
 const csv = require("fast-csv");
 const path = require("path");
 const bodyParser = require("body-parser");
+const { parse } = require('date-fns'); // Add this line to import date-fns for date parsing
 
 const app = express();
 
@@ -152,7 +153,46 @@ app.post("/flattradePlaceOrder", async (req, res) => {
     res.status(500).json({ message: 'Error placing order', error: error.message });
   }
 });
+// Broker Flattrade - Get Symbols
+app.get("/flattradeSymbols", (req, res) => {
+  const { exchangeSymbol, masterSymbol } = req.query;
+  const callStrikes = [];
+  const putStrikes = [];
+  const expiryDates = new Set();
 
+  fs.createReadStream("./Nfo_Index_Derivatives.csv")
+    .pipe(csv.parse({ headers: true }))
+    .on("data", (row) => {
+      console.log("Row data:", row); // Log each row to see the data being read
+      if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
+        const strikeData = {
+          tradingSymbol: row["Tradingsymbol"],
+          optionType: row["Optiontype"],
+        };
+        if (row["Optiontype"] === "CE") {
+          callStrikes.push(strikeData);
+        } else if (row["Optiontype"] === "PE") {
+          putStrikes.push(strikeData);
+        }
+        const parsedExpiryDate = parse(row["Expiry"], 'dd-MMM-yyyy', new Date());
+        expiryDates.add(parsedExpiryDate.toISOString());
+      }
+    })
+    .on("end", () => {
+      console.log("Call Strikes:", callStrikes); // Log the callStrikes array
+      console.log("Put Strikes:", putStrikes); // Log the putStrikes array
+      console.log("Expiry Dates:", Array.from(expiryDates)); // Log the expiryDates set
+      res.json({
+        callStrikes,
+        putStrikes,
+        expiryDates: Array.from(expiryDates),
+      });
+    })
+    .on("error", (error) => {
+      console.error("Error processing CSV file:", error); // Log any errors
+      res.status(500).json({ message: "Failed to process CSV file" });
+    });
+});
 
 // All Dhan API Endpoints
 // Broker Dhan - Proxy configuration for Dhan API
@@ -198,7 +238,8 @@ app.get("/dhanFundLimit", async (req, res) => {
   }
 });
 
-app.get("/symbols", (req, res) => {
+// Broker Dhan - Get Symbols
+app.get("/dhanSymbols", (req, res) => {
   const { exchangeSymbol, masterSymbol } = req.query;
   const callStrikes = [];
   const putStrikes = [];
