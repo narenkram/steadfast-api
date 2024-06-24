@@ -172,7 +172,7 @@ app.get("/flattradeSymbols", (req, res) => {
           tradingSymbol: row["Tradingsymbol"],
           securityId: row["Token"],
           expiryDate: formattedExpiryDate, // Add expiryDate to the response,
-          strike: row["Strike"]
+          strikePrice: row["Strike"]
         };
         if (row["Optiontype"] === "CE") {
           callStrikes.push(strikeData);
@@ -260,7 +260,7 @@ app.get("/dhanSymbols", (req, res) => {
             tradingSymbol: row["SEM_TRADING_SYMBOL"],
             expiryDate: row["SEM_EXPIRY_DATE"],
             securityId: row["SEM_SMST_SECURITY_ID"],
-            strike: row["SEM_STRIKE_PRICE"]
+            strikePrice: row["SEM_STRIKE_PRICE"]
           };
           if (row["SEM_OPTION_TYPE"] === "CE") {
             callStrikes.push(strikeData);
