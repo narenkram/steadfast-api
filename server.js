@@ -164,18 +164,19 @@ app.get("/flattradeSymbols", (req, res) => {
     .pipe(csv.parse({ headers: true }))
     .on("data", (row) => {
       if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
+        const parsedExpiryDate = parse(row["Expiry"], 'dd-MMM-yyyy', new Date());
+        const formattedExpiryDate = parsedExpiryDate.toISOString().split('T')[0]; // Remove the time part
         const strikeData = {
           tradingSymbol: row["Tradingsymbol"],
           optionType: row["Optiontype"],
-          securityId: row["Token"]
+          securityId: row["Token"],
+          expiryDate: formattedExpiryDate // Add expiryDate to the response
         };
         if (row["Optiontype"] === "CE") {
           callStrikes.push(strikeData);
         } else if (row["Optiontype"] === "PE") {
           putStrikes.push(strikeData);
         }
-        const parsedExpiryDate = parse(row["Expiry"], 'dd-MMM-yyyy', new Date());
-        const formattedExpiryDate = parsedExpiryDate.toISOString().split('T')[0]; // Remove the time part
         expiryDates.add(formattedExpiryDate);
       }
     })
