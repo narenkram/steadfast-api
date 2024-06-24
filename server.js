@@ -160,7 +160,9 @@ app.get("/flattradeSymbols", (req, res) => {
   const putStrikes = [];
   const expiryDates = new Set();
 
-  fs.createReadStream("./Nfo_Index_Derivatives.csv")
+  const csvFilePath = exchangeSymbol === "BFO" ? "./Bfo_Index_Derivatives.csv" : "./Nfo_Index_Derivatives.csv";
+
+  fs.createReadStream(csvFilePath)
     .pipe(csv.parse({ headers: true }))
     .on("data", (row) => {
       if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
