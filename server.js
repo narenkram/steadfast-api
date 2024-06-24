@@ -168,7 +168,6 @@ app.get("/flattradeSymbols", (req, res) => {
         const formattedExpiryDate = parsedExpiryDate.toISOString().split('T')[0]; // Remove the time part
         const strikeData = {
           tradingSymbol: row["Tradingsymbol"],
-          optionType: row["Optiontype"],
           securityId: row["Token"],
           expiryDate: formattedExpiryDate // Add expiryDate to the response
         };
@@ -195,7 +194,6 @@ app.get("/flattradeSymbols", (req, res) => {
       res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
-
 // All Dhan API Endpoints
 // Broker Dhan - Proxy configuration for Dhan API
 app.use(
