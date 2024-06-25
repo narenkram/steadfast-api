@@ -6,7 +6,7 @@ const fs = require("fs");
 const csv = require("fast-csv");
 const path = require("path");
 const bodyParser = require("body-parser");
-const { parse, isBefore } = require('date-fns'); // Add this line to import date-fns for date parsing and comparison
+const { parse, isBefore } = require("date-fns"); // Add this line to import date-fns for date parsing and comparison
 
 const app = express();
 
@@ -69,7 +69,7 @@ app.get("/brokers", (req, res) => {
 
 // All Flattrade API Endpoints
 // Send Credentials for Manage Brokers
-app.get('/api/flattrade-credentials', (req, res) => {
+app.get("/api/flattrade-credentials", (req, res) => {
   res.json({
     apiKey: FLATTRADE_API_KEY,
     apiSecret: FLATTRADE_API_SECRET,
@@ -89,40 +89,38 @@ app.use(
 // Broker Flattrade - Get Funds
 app.post("/flattradeFundLimit", async (req, res) => {
   const jKey = req.query.generatedToken || req.query.token;
-  const jData = JSON.stringify({ uid: 'FT014523', actid: 'FT014523' });
+  const jData = JSON.stringify({ uid: "FT014523", actid: "FT014523" });
   const payload = `jKey=${jKey}&jData=${jData}`;
 
   try {
-    const response = await axios.post('https://piconnect.flattrade.in/PiConnectTP/Limits', payload, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+    const response = await axios.post(
+      "https://piconnect.flattrade.in/PiConnectTP/Limits",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }
-    });
+    );
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching fund limits:', error);
-    res.status(500).json({ message: 'Error fetching fund limits', error: error.message });
+    console.error("Error fetching fund limits:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching fund limits", error: error.message });
   }
 });
 // Broker Flattrade - Route to place an order to include securityId from the request
 app.post("/flattradePlaceOrder", async (req, res) => {
-  const {
-    uid,
-    actid,
-    exch,
-    tsym,
-    qty,
-    prc,
-    prd,
-    trantype,
-    prctyp,
-    ret
-  } = req.body;
+  const { uid, actid, exch, tsym, qty, prc, prd, trantype, prctyp, ret } =
+    req.body;
 
-  const jKey = req.headers.authorization?.split(' ')[1];
+  const jKey = req.headers.authorization?.split(" ")[1];
 
   if (!jKey) {
-    return res.status(400).json({ message: 'Token is missing. Please generate a token first.' });
+    return res
+      .status(400)
+      .json({ message: "Token is missing. Please generate a token first." });
   }
 
   const jData = JSON.stringify({
@@ -135,22 +133,28 @@ app.post("/flattradePlaceOrder", async (req, res) => {
     prd,
     trantype,
     prctyp,
-    ret
+    ret,
   });
 
   // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
   const payload = `jKey=${jKey}&jData=${jData}`;
 
   try {
-    const response = await axios.post('https://piconnect.flattrade.in/PiConnectTP/PlaceOrder', payload, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+    const response = await axios.post(
+      "https://piconnect.flattrade.in/PiConnectTP/PlaceOrder",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }
-    });
+    );
     res.json(response.data);
   } catch (error) {
-    console.error('Error placing order:', error);
-    res.status(500).json({ message: 'Error placing order', error: error.message });
+    console.error("Error placing order:", error);
+    res
+      .status(500)
+      .json({ message: "Error placing order", error: error.message });
   }
 });
 
@@ -161,17 +165,23 @@ app.get("/flattradeSymbols", (req, res) => {
   const putStrikes = [];
   const expiryDates = new Set();
 
-  const csvFilePath = exchangeSymbol === "BFO" ? "./Bfo_Index_Derivatives.csv" : "./Nfo_Index_Derivatives.csv";
+  const csvFilePath =
+    exchangeSymbol === "BFO"
+      ? "./Bfo_Index_Derivatives.csv"
+      : "./Nfo_Index_Derivatives.csv";
 
   fs.createReadStream(csvFilePath)
     .pipe(csv.parse({ headers: true }))
     .on("data", (row) => {
-      if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
+      if (
+        row["Symbol"] === masterSymbol &&
+        row["Exchange"] === exchangeSymbol
+      ) {
         const strikeData = {
           tradingSymbol: row["Tradingsymbol"],
           securityId: row["Token"],
           expiryDate: row["Expiry"], // Send expiry date without parsing or formatting
-          strikePrice: row["Strike"]
+          strikePrice: row["Strike"],
         };
         if (row["Optiontype"] === "CE") {
           callStrikes.push(strikeData);
@@ -189,10 +199,13 @@ app.get("/flattradeSymbols", (req, res) => {
       // Filter out past dates and sort the remaining expiry dates
       const today = new Date();
       const sortedExpiryDates = Array.from(expiryDates)
-        .filter(dateStr => !isBefore(parse(dateStr, 'dd-MMM-yyyy', new Date()), today))
+        .filter(
+          (dateStr) =>
+            !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today)
+        )
         .sort((a, b) => {
-          const dateA = parse(a, 'dd-MMM-yyyy', new Date());
-          const dateB = parse(b, 'dd-MMM-yyyy', new Date());
+          const dateA = parse(a, "dd-MMM-yyyy", new Date());
+          const dateB = parse(b, "dd-MMM-yyyy", new Date());
           return dateA - dateB;
         });
 
@@ -270,7 +283,7 @@ app.get("/dhanSymbols", (req, res) => {
             tradingSymbol: row["SEM_CUSTOM_SYMBOL"],
             expiryDate: row["SEM_EXPIRY_DATE"].split(" ")[0], // Remove time from expiry date
             securityId: row["SEM_SMST_SECURITY_ID"],
-            strikePrice: row["SEM_STRIKE_PRICE"]
+            strikePrice: row["SEM_STRIKE_PRICE"],
           };
           if (row["SEM_OPTION_TYPE"] === "CE") {
             callStrikes.push(strikeData);
@@ -284,10 +297,13 @@ app.get("/dhanSymbols", (req, res) => {
     .on("end", () => {
       const today = new Date();
       const sortedExpiryDates = Array.from(expiryDates)
-        .filter(dateStr => !isBefore(parse(dateStr, 'yyyy-MM-dd', new Date()), today))
+        .filter(
+          (dateStr) =>
+            !isBefore(parse(dateStr, "yyyy-MM-dd", new Date()), today)
+        )
         .sort((a, b) => {
-          const dateA = parse(a, 'yyyy-MM-dd', new Date());
-          const dateB = parse(b, 'yyyy-MM-dd', new Date());
+          const dateA = parse(a, "yyyy-MM-dd", new Date());
+          const dateB = parse(b, "yyyy-MM-dd", new Date());
           return dateA - dateB;
         });
 
@@ -458,4 +474,3 @@ app.delete("/cancelOrder", async (req, res) => {
     res.status(500).json({ message: "Failed to cancel order" });
   }
 });
-
