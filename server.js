@@ -253,11 +253,11 @@ app.get("/dhanSymbols", (req, res) => {
     .on("data", (row) => {
       if (
         row["SEM_EXM_EXCH_ID"] === exchangeSymbol &&
-        row["SEM_TRADING_SYMBOL"].startsWith(masterSymbol + "-")
+        row["SEM_CUSTOM_SYMBOL"].startsWith(masterSymbol)
       ) {
         if (["OPTIDX", "OP"].includes(row["SEM_EXCH_INSTRUMENT_TYPE"])) {
           const strikeData = {
-            tradingSymbol: row["SEM_TRADING_SYMBOL"],
+            tradingSymbol: row["SEM_CUSTOM_SYMBOL"],
             expiryDate: row["SEM_EXPIRY_DATE"],
             securityId: row["SEM_SMST_SECURITY_ID"],
             strikePrice: row["SEM_STRIKE_PRICE"]
