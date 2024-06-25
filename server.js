@@ -6,7 +6,7 @@ const fs = require("fs");
 const csv = require("fast-csv");
 const path = require("path");
 const bodyParser = require("body-parser");
-const { parse } = require('date-fns'); // Add this line to import date-fns for date parsing
+const { parse, isBefore } = require('date-fns'); // Add this line to import date-fns for date parsing and comparison
 
 const app = express();
 
@@ -153,6 +153,7 @@ app.post("/flattradePlaceOrder", async (req, res) => {
     res.status(500).json({ message: 'Error placing order', error: error.message });
   }
 });
+
 // Broker Flattrade - Get Symbols
 app.get("/flattradeSymbols", (req, res) => {
   const { exchangeSymbol, masterSymbol } = req.query;
@@ -166,12 +167,10 @@ app.get("/flattradeSymbols", (req, res) => {
     .pipe(csv.parse({ headers: true }))
     .on("data", (row) => {
       if (row["Symbol"] === masterSymbol && row["Exchange"] === exchangeSymbol) {
-        const parsedExpiryDate = parse(row["Expiry"], 'dd-MMM-yyyy', new Date());
-        const formattedExpiryDate = parsedExpiryDate.toISOString().split('T')[0]; // Remove the time part
         const strikeData = {
           tradingSymbol: row["Tradingsymbol"],
           securityId: row["Token"],
-          expiryDate: formattedExpiryDate, // Add expiryDate to the response,
+          expiryDate: row["Expiry"], // Send expiry date without parsing or formatting
           strikePrice: row["Strike"]
         };
         if (row["Optiontype"] === "CE") {
@@ -179,17 +178,28 @@ app.get("/flattradeSymbols", (req, res) => {
         } else if (row["Optiontype"] === "PE") {
           putStrikes.push(strikeData);
         }
-        expiryDates.add(formattedExpiryDate);
+        expiryDates.add(row["Expiry"]);
       }
     })
     .on("end", () => {
       console.log("Call Strikes:", callStrikes); // Log the callStrikes array
       console.log("Put Strikes:", putStrikes); // Log the putStrikes array
       console.log("Expiry Dates:", Array.from(expiryDates)); // Log the expiryDates set
+
+      // Filter out past dates and sort the remaining expiry dates
+      const today = new Date();
+      const sortedExpiryDates = Array.from(expiryDates)
+        .filter(dateStr => !isBefore(parse(dateStr, 'dd-MMM-yyyy', new Date()), today))
+        .sort((a, b) => {
+          const dateA = parse(a, 'dd-MMM-yyyy', new Date());
+          const dateB = parse(b, 'dd-MMM-yyyy', new Date());
+          return dateA - dateB;
+        });
+
       res.json({
         callStrikes,
         putStrikes,
-        expiryDates: Array.from(expiryDates),
+        expiryDates: sortedExpiryDates, // Send the sorted expiry dates
       });
     })
     .on("error", (error) => {
@@ -253,12 +263,12 @@ app.get("/dhanSymbols", (req, res) => {
     .on("data", (row) => {
       if (
         row["SEM_EXM_EXCH_ID"] === exchangeSymbol &&
-        row["SEM_CUSTOM_SYMBOL"].startsWith(masterSymbol)
+        new RegExp(`^${masterSymbol} `).test(row["SEM_CUSTOM_SYMBOL"]) // Use regex to match masterSymbol followed by a space
       ) {
         if (["OPTIDX", "OP"].includes(row["SEM_EXCH_INSTRUMENT_TYPE"])) {
           const strikeData = {
             tradingSymbol: row["SEM_CUSTOM_SYMBOL"],
-            expiryDate: row["SEM_EXPIRY_DATE"],
+            expiryDate: row["SEM_EXPIRY_DATE"].split(" ")[0], // Remove time from expiry date
             securityId: row["SEM_SMST_SECURITY_ID"],
             strikePrice: row["SEM_STRIKE_PRICE"]
           };
@@ -267,15 +277,24 @@ app.get("/dhanSymbols", (req, res) => {
           } else if (row["SEM_OPTION_TYPE"] === "PE") {
             putStrikes.push(strikeData);
           }
-          expiryDates.add(row["SEM_EXPIRY_DATE"]);
+          expiryDates.add(row["SEM_EXPIRY_DATE"].split(" ")[0]); // Remove time from expiry date
         }
       }
     })
     .on("end", () => {
+      const today = new Date();
+      const sortedExpiryDates = Array.from(expiryDates)
+        .filter(dateStr => !isBefore(parse(dateStr, 'yyyy-MM-dd', new Date()), today))
+        .sort((a, b) => {
+          const dateA = parse(a, 'yyyy-MM-dd', new Date());
+          const dateB = parse(b, 'yyyy-MM-dd', new Date());
+          return dateA - dateB;
+        });
+
       res.json({
         callStrikes,
         putStrikes,
-        expiryDates: Array.from(expiryDates),
+        expiryDates: sortedExpiryDates,
       });
     })
     .on("error", (error) => {
