@@ -202,7 +202,8 @@ app.get("/flattradeSymbols", (req, res) => {
       const sortedExpiryDates = Array.from(expiryDates)
         .filter(
           (dateStr) =>
-            !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today)
+            !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today) ||
+            parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() === today.toDateString()
         )
         .sort((a, b) => {
           const dateA = parse(a, "dd-MMM-yyyy", new Date());
@@ -299,8 +300,10 @@ app.get("/dhanSymbols", (req, res) => {
       const today = new Date();
       const sortedExpiryDates = Array.from(expiryDates)
         .filter(
-          (dateStr) =>
-            !isBefore(parse(dateStr, "yyyy-MM-dd", new Date()), today)
+          (dateStr) => {
+            const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
+            return !isBefore(parsedDate, today) || parsedDate.toDateString() === today.toDateString();
+          }
         )
         .sort((a, b) => {
           const dateA = parse(a, "yyyy-MM-dd", new Date());
