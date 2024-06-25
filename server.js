@@ -73,6 +73,7 @@ app.get("/api/flattrade-credentials", (req, res) => {
   res.json({
     apiKey: FLATTRADE_API_KEY,
     apiSecret: FLATTRADE_API_SECRET,
+    clientId: FLATTRADE_CLIENT_ID, 
   });
 });
 // Broker Flattrade - Proxy configuration for Flattrade API
@@ -89,7 +90,7 @@ app.use(
 // Broker Flattrade - Get Funds
 app.post("/flattradeFundLimit", async (req, res) => {
   const jKey = req.query.generatedToken || req.query.token;
-  const jData = JSON.stringify({ uid: "FT014523", actid: "FT014523" });
+  const jData = JSON.stringify({ uid: FLATTRADE_CLIENT_ID, actid: FLATTRADE_CLIENT_ID });
   const payload = `jKey=${jKey}&jData=${jData}`;
 
   try {
