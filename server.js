@@ -44,11 +44,9 @@ const brokers = [
     brokerClientId: DHAN_CLIENT_ID,
     brokerName: "Dhan",
     appId: "dhan-app-id",
-    apiKey: DHAN_ACCESS_TOKEN,
-    apiSecret: DHAN_ACCESS_TOKEN,
-    status: "Active",
-    lastTokenGeneratedAt: "2023-10-01T12:00:00Z",
-    addedAt: "2023-09-01T12:00:00Z",
+    apiKey: "",
+    apiSecret: "",
+    apiToken: DHAN_ACCESS_TOKEN,
   },
   {
     brokerClientId: FLATTRADE_CLIENT_ID,
@@ -56,9 +54,6 @@ const brokers = [
     appId: "flattrade-app-id",
     apiKey: FLATTRADE_API_KEY,
     apiSecret: FLATTRADE_API_SECRET,
-    status: "Active",
-    lastTokenGeneratedAt: "2023-10-01T12:00:00Z",
-    addedAt: "2023-09-01T12:00:00Z",
   },
   // Add more brokers as needed
 ];
@@ -73,7 +68,7 @@ app.get("/api/flattrade-credentials", (req, res) => {
   res.json({
     apiKey: FLATTRADE_API_KEY,
     apiSecret: FLATTRADE_API_SECRET,
-    clientId: FLATTRADE_CLIENT_ID, 
+    clientId: FLATTRADE_CLIENT_ID,
   });
 });
 // Broker Flattrade - Proxy configuration for Flattrade API
@@ -90,7 +85,10 @@ app.use(
 // Broker Flattrade - Get Funds
 app.post("/flattradeFundLimit", async (req, res) => {
   const jKey = req.query.generatedToken || req.query.token;
-  const jData = JSON.stringify({ uid: FLATTRADE_CLIENT_ID, actid: FLATTRADE_CLIENT_ID });
+  const jData = JSON.stringify({
+    uid: FLATTRADE_CLIENT_ID,
+    actid: FLATTRADE_CLIENT_ID,
+  });
   const payload = `jKey=${jKey}&jData=${jData}`;
 
   try {
@@ -203,7 +201,8 @@ app.get("/flattradeSymbols", (req, res) => {
         .filter(
           (dateStr) =>
             !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today) ||
-            parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() === today.toDateString()
+            parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() ===
+              today.toDateString()
         )
         .sort((a, b) => {
           const dateA = parse(a, "dd-MMM-yyyy", new Date());
@@ -222,7 +221,15 @@ app.get("/flattradeSymbols", (req, res) => {
       res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
+
 // All Dhan API Endpoints
+// Send Dhan API credentials
+app.get("/api/dhan-credentials", (req, res) => {
+  res.json({
+    apiToken: DHAN_ACCESS_TOKEN,
+    clientId: DHAN_CLIENT_ID,
+  });
+});
 // Broker Dhan - Proxy configuration for Dhan API
 app.use(
   "/api",
@@ -299,12 +306,13 @@ app.get("/dhanSymbols", (req, res) => {
     .on("end", () => {
       const today = new Date();
       const sortedExpiryDates = Array.from(expiryDates)
-        .filter(
-          (dateStr) => {
-            const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
-            return !isBefore(parsedDate, today) || parsedDate.toDateString() === today.toDateString();
-          }
-        )
+        .filter((dateStr) => {
+          const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
+          return (
+            !isBefore(parsedDate, today) ||
+            parsedDate.toDateString() === today.toDateString()
+          );
+        })
         .sort((a, b) => {
           const dateA = parse(a, "yyyy-MM-dd", new Date());
           const dateB = parse(b, "yyyy-MM-dd", new Date());
