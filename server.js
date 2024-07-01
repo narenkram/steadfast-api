@@ -43,7 +43,6 @@ const brokers = [
   {
     brokerClientId: DHAN_CLIENT_ID,
     brokerName: "Dhan",
-    appId: "dhan-app-id",
     apiKey: "",
     apiSecret: "",
     apiToken: DHAN_ACCESS_TOKEN,
@@ -51,7 +50,6 @@ const brokers = [
   {
     brokerClientId: FLATTRADE_CLIENT_ID,
     brokerName: "Flattrade",
-    appId: "flattrade-app-id",
     apiKey: FLATTRADE_API_KEY,
     apiSecret: FLATTRADE_API_SECRET,
   },
@@ -84,7 +82,7 @@ app.use(
 );
 // Broker Flattrade - Get Funds
 app.post("/flattradeFundLimit", async (req, res) => {
-  const jKey = req.query.generatedToken || req.query.token;
+  const jKey = req.query.FLATTRADE_API_TOKEN || req.query.token;
   const jData = JSON.stringify({
     uid: FLATTRADE_CLIENT_ID,
     actid: FLATTRADE_CLIENT_ID,
