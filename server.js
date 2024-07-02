@@ -218,6 +218,61 @@ app.get("/flattradeSymbols", (req, res) => {
       res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
+// Broker Flattrade - Get Orders and Trades
+app.get("/flattradeGetOrdersAndTrades", async (req, res) => {
+  const jKey = req.query.FLATTRADE_API_TOKEN;
+  const clientId = req.query.FLATTRADE_CLIENT_ID;
+
+  if (!jKey || !clientId) {
+    return res.status(400).json({ message: "Token or Client ID is missing." });
+  }
+
+  const orderBookPayload = `jKey=${jKey}&jData=${JSON.stringify({
+    uid: clientId,
+    prd: "M",
+  })}`;
+  const tradeBookPayload = `jKey=${jKey}&jData=${JSON.stringify({
+    uid: clientId,
+    actid: clientId,
+  })}`;
+
+  try {
+    // Fetch Order Book
+    const orderBookRes = await axios.post(
+      "https://piconnect.flattrade.in/PiConnectTP/OrderBook",
+      orderBookPayload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    // Fetch Trade Book
+    const tradeBookRes = await axios.post(
+      "https://piconnect.flattrade.in/PiConnectTP/TradeBook",
+      tradeBookPayload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    res.json({
+      orderBook: orderBookRes.data,
+      tradeBook: tradeBookRes.data,
+    });
+  } catch (error) {
+    console.error("Error fetching orders and trades:", error);
+    res
+      .status(500)
+      .json({
+        message: "Error fetching orders and trades",
+        error: error.message,
+      });
+  }
+});
 // Broker Flattrade - Route to cancel an order
 app.post("/flattradeCancelOrder", async (req, res) => {
   const { norenordno, uid } = req.body;
@@ -451,7 +506,7 @@ app.post("/killSwitch", async (req, res) => {
 });
 
 // Broker Dhan - Route to get orders
-app.get("/getOrders", async (req, res) => {
+app.get("/dhanGetOrders", async (req, res) => {
   const options = {
     method: "GET",
     url: "https://api.dhan.co/orders",
@@ -491,7 +546,7 @@ app.get("/dhanPositions", async (req, res) => {
 });
 
 // Broker Dhan - Route to cancel an order
-app.delete("/cancelOrder", async (req, res) => {
+app.delete("/dhanCancelOrder", async (req, res) => {
   const { orderId } = req.body;
 
   if (!orderId) {
