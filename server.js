@@ -265,18 +265,16 @@ app.get("/flattradeGetOrdersAndTrades", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching orders and trades:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error fetching orders and trades",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching orders and trades",
+      error: error.message,
+    });
   }
 });
 // Broker Flattrade - Route to cancel an order
 app.post("/flattradeCancelOrder", async (req, res) => {
   const { norenordno, uid } = req.body;
-  const jKey = req.headers.authorization?.split(" ")[1];
+  const jKey = req.query.FLATTRADE_API_TOKEN;
 
   if (!jKey) {
     return res
