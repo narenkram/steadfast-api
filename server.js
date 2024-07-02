@@ -154,7 +154,6 @@ app.post("/flattradePlaceOrder", async (req, res) => {
       .json({ message: "Error placing order", error: error.message });
   }
 });
-
 // Broker Flattrade - Get Symbols
 app.get("/flattradeSymbols", (req, res) => {
   const { exchangeSymbol, masterSymbol } = req.query;
@@ -218,6 +217,38 @@ app.get("/flattradeSymbols", (req, res) => {
       console.error("Error processing CSV file:", error); // Log any errors
       res.status(500).json({ message: "Failed to process CSV file" });
     });
+});
+// Broker Flattrade - Route to cancel an order
+app.post("/flattradeCancelOrder", async (req, res) => {
+  const { norenordno, uid } = req.body;
+  const jKey = req.headers.authorization?.split(" ")[1];
+
+  if (!jKey) {
+    return res
+      .status(400)
+      .json({ message: "Token is missing. Please generate a token first." });
+  }
+
+  const jData = JSON.stringify({ norenordno, uid });
+  const payload = `jKey=${jKey}&jData=${jData}`;
+
+  try {
+    const response = await axios.post(
+      "https://piconnect.flattrade.in/PiConnectTP/CancelOrder",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res
+      .status(500)
+      .json({ message: "Error cancelling order", error: error.message });
+  }
 });
 
 // All Dhan API Endpoints
