@@ -10,7 +10,13 @@ const { parse, isBefore } = require("date-fns"); // Add this line to import date
 
 const app = express();
 
-// Enable fucking CORS for your frontend's origin
+// Debugging middleware
+app.use((req, res, next) => {
+  console.log(`Received ${req.method} request for ${req.url}`);
+  next();
+});
+
+// Enable CORS for your frontend's origin
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -21,15 +27,6 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Add this line to parse URL-encoded data
-
-// Root route to prevent "Cannot GET /" error
-app.get("/", (req, res) => {
-  res.send("Welcome to the Proxy Server");
-});
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
 
 require("dotenv").config();
 // All Brokers API Keys, Client IDs, Secret IDs
@@ -69,6 +66,40 @@ app.get("/api/flattrade-credentials", (req, res) => {
     clientId: FLATTRADE_CLIENT_ID,
   });
 });
+
+// At the top of your file, add this to store the credentials
+let storedCredentials = {
+  usersession: '',
+  userid: ''
+};
+
+// Update the POST endpoint to store the credentials
+app.post("/api/set-flattrade-credentials", (req, res) => {
+  console.log("Received POST request to set credentials");
+  const { usersession, userid } = req.body;
+  
+  // Store the credentials
+  storedCredentials = { usersession, userid };
+  
+  console.log("Updated credentials:", storedCredentials);
+  res.json({ message: "Credentials updated successfully" });
+});
+
+// Update the GET endpoint to use the stored credentials
+app.get("/flattrade-websocket-credentials", (req, res) => {
+  console.log("Received GET request for flattrade websocket credentials");
+
+  // Use the stored credentials
+  const websocketCredentials = {
+    usersession: storedCredentials.usersession,
+    userid: storedCredentials.userid,
+  };
+
+  console.log("Sending websocket credentials:", websocketCredentials);
+
+  res.json(websocketCredentials);
+});
+
 // Broker Flattrade - Proxy configuration for Flattrade API
 app.use(
   "/flattradeApi",
@@ -567,4 +598,13 @@ app.delete("/dhanCancelOrder", async (req, res) => {
     console.error("Failed to cancel order:", error);
     res.status(500).json({ message: "Failed to cancel order" });
   }
+});
+
+// Root route to prevent "Cannot GET /" error
+app.get("/", (req, res) => {
+  res.send("Welcome to the Proxy Server");
+});
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
