@@ -70,34 +70,37 @@ app.get("/api/flattrade-credentials", (req, res) => {
 // At the top of your file, add this to store the credentials
 let storedCredentials = {
   usersession: '',
-  userid: ''
+  userid: '',
+  defaultCallSecurityId: '',
+  defaultPutSecurityId: ''
 };
-
-// Update the POST endpoint to store the credentials
+// Update the POST endpoint to store the credentials and security IDs
 app.post("/api/set-flattrade-credentials", (req, res) => {
-  console.log("Received POST request to set credentials");
-  const { usersession, userid } = req.body;
+  console.log("Received POST request to set credentials and security IDs");
+  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } = req.body;
   
-  // Store the credentials
-  storedCredentials = { usersession, userid };
+  // Store the credentials and security IDs
+  storedCredentials = { usersession, userid, defaultCallSecurityId, defaultPutSecurityId };
   
-  console.log("Updated credentials:", storedCredentials);
-  res.json({ message: "Credentials updated successfully" });
+  console.log("Updated credentials and security IDs:", storedCredentials);
+  res.json({ message: "Credentials and security IDs updated successfully" });
 });
 
-// Update the GET endpoint to use the stored credentials
-app.get("/flattrade-websocket-credentials", (req, res) => {
-  console.log("Received GET request for flattrade websocket credentials");
+// Update the GET endpoint to use the stored credentials and security IDs
+app.get("/flattrade-websocket-data", (req, res) => {
+  console.log("Received GET request for flattrade websocket data");
 
-  // Use the stored credentials
-  const websocketCredentials = {
+  // Use the stored credentials and security IDs
+  const websocketData = {
     usersession: storedCredentials.usersession,
     userid: storedCredentials.userid,
+    defaultCallSecurityId: storedCredentials.defaultCallSecurityId,
+    defaultPutSecurityId: storedCredentials.defaultPutSecurityId
   };
 
-  console.log("Sending websocket credentials:", websocketCredentials);
+  console.log("Sending websocket data:", websocketData);
 
-  res.json(websocketCredentials);
+  res.json(websocketData);
 });
 
 // Broker Flattrade - Proxy configuration for Flattrade API
