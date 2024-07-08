@@ -10,7 +10,17 @@ node server.js
 
 The application will be available at http://localhost:3000.
 
-## Get your API Key from DhanHQ and replace API Key in steadfast-stoic-api/.env
+### Get your API Key from your Broker and replace API Key in steadfast-stoic-api/.env
+
+```
+DHAN_CLIENT_ID = "Your_Dhan_Client_ID"
+DHAN_API_TOKEN = "Your_Dhan_API_Token"
+
+
+FLATTRADE_CLIENT_ID = "Your_Flattrade_Client_ID"
+FLATTRADE_API_KEY = "Your_Flattrade_API_Key"
+FLATTRADE_API_SECRET = "Your_Flattrade_API_Secret"
+```
 
 [Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
 
