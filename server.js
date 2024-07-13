@@ -386,12 +386,18 @@ app.use(
 
 // Broker Dhan - Get Funds
 app.get("/dhanFundLimit", async (req, res) => {
+  const dhanApiToken = req.query.DHAN_API_TOKEN;
+
+  if (!dhanApiToken) {
+    return res.status(400).json({ message: "Dhan API is missing." });
+  }
+
   try {
     const options = {
       method: "GET",
       url: "https://api.dhan.co/fundlimit",
       headers: {
-        "access-token": process.env.DHAN_API_TOKEN,
+        "access-token": dhanApiToken,
         Accept: "application/json",
       },
     };
@@ -573,11 +579,17 @@ app.get("/dhanGetOrders", async (req, res) => {
 
 // Broker Dhan - Route to fetch positions
 app.get("/dhanPositions", async (req, res) => {
+  const dhanApiToken = req.query.DHAN_API_TOKEN;
+
+  if (!dhanApiToken) {
+    return res.status(400).json({ message: "Dhan API is missing." });
+  }
+
   const options = {
     method: "GET",
     url: "https://api.dhan.co/positions",
     headers: {
-      "access-token": process.env.DHAN_API_TOKEN, // Use the API token from environment variables
+      "access-token": dhanApiToken, // Use the API token from environment variables
       Accept: "application/json",
     },
   };
