@@ -122,10 +122,18 @@ app.use(
 );
 // Broker Flattrade - Get Funds
 app.post("/flattradeFundLimit", async (req, res) => {
-  const jKey = req.query.FLATTRADE_API_TOKEN || req.query.token;
+  const jKey = req.query.FLATTRADE_API_TOKEN;
+  const clientId = req.query.FLATTRADE_CLIENT_ID;
+
+  if (!jKey || !clientId) {
+    return res
+      .status(400)
+      .json({ message: "API token or Client ID is missing." });
+  }
+
   const jData = JSON.stringify({
-    uid: FLATTRADE_CLIENT_ID,
-    actid: FLATTRADE_CLIENT_ID,
+    uid: clientId,
+    actid: clientId,
   });
   const payload = `jKey=${jKey}&jData=${jData}`;
 
