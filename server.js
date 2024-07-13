@@ -559,11 +559,17 @@ app.post("/killSwitch", async (req, res) => {
 
 // Broker Dhan - Route to get orders
 app.get("/dhanGetOrders", async (req, res) => {
+  const dhanApiToken = req.query.DHAN_API_TOKEN;
+
+  if (!dhanApiToken) {
+    return res.status(400).json({ message: "Dhan API is missing." });
+  }
+
   const options = {
     method: "GET",
     url: "https://api.dhan.co/orders",
     headers: {
-      "access-token": process.env.DHAN_API_TOKEN, // Set the API token from environment variables
+      "access-token": dhanApiToken, // Set the API token from environment variables
       Accept: "application/json",
     },
   };
