@@ -445,6 +445,12 @@ app.get("/dhanSymbols", (req, res) => {
 
 // Broker Dhan - Route to place an order to include securityId from the request
 app.post("/dhanPlaceOrder", async (req, res) => {
+  const dhanApiToken = req.query.DHAN_API_TOKEN;
+
+  if (!dhanApiToken) {
+    return res.status(400).json({ message: "Dhan API is missing." });
+  }
+
   const {
     brokerClientId,
     transactionType,
@@ -464,7 +470,7 @@ app.post("/dhanPlaceOrder", async (req, res) => {
     method: "POST",
     url: "https://api.dhan.co/orders",
     headers: {
-      "access-token": process.env.DHAN_API_TOKEN,
+      "access-token": dhanApiToken,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
