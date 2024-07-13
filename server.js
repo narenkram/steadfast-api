@@ -329,6 +329,53 @@ app.post("/flattradeCancelOrder", async (req, res) => {
   }
 });
 
+// All Shoonya API Endpoints
+// Broker Shoonya - Proxy configuration for Shoonya API
+app.use(
+  "/shoonyaApi",
+  createProxyMiddleware({
+    target: "https://api.shoonya.com",
+    changeOrigin: true,
+    pathRewrite: {
+      "^/shoonyaApi": "", // remove /shoonyaApi prefix when forwarding to target
+    },
+  })
+);
+// Broker Shoonya - Get Funds
+app.post("/shoonyaFundLimit", async (req, res) => {
+  const jKey = req.query.SHOONYA_API_TOKEN;
+  const clientId = req.query.SHOONYA_CLIENT_ID;
+
+  if (!jKey || !clientId) {
+    return res
+      .status(400)
+      .json({ message: "API token or Client ID is missing." });
+  }
+
+  const jData = JSON.stringify({
+    uid: clientId,
+    actid: clientId,
+  });
+  const payload = `jKey=${jKey}&jData=${jData}`;
+  try {
+    const response = await axios.post(
+      "https://api.shoonya.com/NorenWClientTP/Limits",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching fund limits:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching fund limits", error: error.message });
+  }
+});
+
 // All Dhan API Endpoints
 // Send Dhan API credentials
 app.get("/api/dhan-credentials", (req, res) => {
