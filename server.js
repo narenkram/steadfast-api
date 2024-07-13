@@ -555,6 +555,12 @@ app.get("/dhanPositions", async (req, res) => {
 
 // Broker Dhan - Route to cancel an order
 app.delete("/dhanCancelOrder", async (req, res) => {
+  const dhanApiToken = req.query.DHAN_API_TOKEN;
+
+  if (!dhanApiToken) {
+    return res.status(400).json({ message: "Dhan API is missing." });
+  }
+
   const { orderId } = req.body;
 
   if (!orderId) {
@@ -565,7 +571,7 @@ app.delete("/dhanCancelOrder", async (req, res) => {
     method: "DELETE",
     url: `https://api.dhan.co/orders/${orderId}`,
     headers: {
-      "access-token": process.env.DHAN_API_TOKEN,
+      "access-token": dhanApiToken,
       Accept: "application/json",
     },
   };
