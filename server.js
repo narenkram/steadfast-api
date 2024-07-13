@@ -29,29 +29,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Add this line to parse URL-encoded data
 
 require("dotenv").config();
-// All Brokers API Keys, Client IDs, Secret IDs
-const DHAN_ACCESS_TOKEN = process.env.DHAN_API_TOKEN;
-const DHAN_CLIENT_ID = String(process.env.DHAN_CLIENT_ID);
-const FLATTRADE_CLIENT_ID = String(process.env.FLATTRADE_CLIENT_ID);
-const FLATTRADE_API_KEY = String(process.env.FLATTRADE_API_KEY);
-const FLATTRADE_API_SECRET = String(process.env.FLATTRADE_API_SECRET);
-
-const brokers = [
-  {
-    brokerClientId: DHAN_CLIENT_ID,
-    brokerName: "Dhan",
-    apiKey: "",
-    apiSecret: "",
-    apiToken: DHAN_ACCESS_TOKEN,
-  },
-  {
-    brokerClientId: FLATTRADE_CLIENT_ID,
-    brokerName: "Flattrade",
-    apiKey: FLATTRADE_API_KEY,
-    apiSecret: FLATTRADE_API_SECRET,
-  },
-  // Add more brokers as needed
-];
 
 app.get("/brokers", (req, res) => {
   res.json(brokers);
