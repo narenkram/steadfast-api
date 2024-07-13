@@ -375,6 +375,70 @@ app.post("/shoonyaFundLimit", async (req, res) => {
       .json({ message: "Error fetching fund limits", error: error.message });
   }
 });
+// Broker Shoonya - Get Symbols
+app.get("/shoonyaSymbols", (req, res) => {
+  const { exchangeSymbol, masterSymbol } = req.query;
+  const callStrikes = [];
+  const putStrikes = [];
+  const expiryDates = new Set();
+
+  const csvFilePath =
+    exchangeSymbol === "BFO"
+      ? "./Bfo_Index_Derivatives.csv"
+      : "./Nfo_Index_Derivatives.csv";
+
+  fs.createReadStream(csvFilePath)
+    .pipe(csv.parse({ headers: true }))
+    .on("data", (row) => {
+      if (
+        row["Symbol"] === masterSymbol &&
+        row["Exchange"] === exchangeSymbol
+      ) {
+        const strikeData = {
+          tradingSymbol: row["Tradingsymbol"],
+          securityId: row["Token"],
+          expiryDate: row["Expiry"], // Send expiry date without parsing or formatting
+          strikePrice: row["Strike"],
+        };
+        if (row["Optiontype"] === "CE") {
+          callStrikes.push(strikeData);
+        } else if (row["Optiontype"] === "PE") {
+          putStrikes.push(strikeData);
+        }
+        expiryDates.add(row["Expiry"]);
+      }
+    })
+    .on("end", () => {
+      console.log("Call Strikes:", callStrikes); // Log the callStrikes array
+      console.log("Put Strikes:", putStrikes); // Log the putStrikes array
+      console.log("Expiry Dates:", Array.from(expiryDates)); // Log the expiryDates set
+
+      // Filter out past dates and sort the remaining expiry dates
+      const today = new Date();
+      const sortedExpiryDates = Array.from(expiryDates)
+        .filter(
+          (dateStr) =>
+            !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today) ||
+            parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() ===
+              today.toDateString()
+        )
+        .sort((a, b) => {
+          const dateA = parse(a, "dd-MMM-yyyy", new Date());
+          const dateB = parse(b, "dd-MMM-yyyy", new Date());
+          return dateA - dateB;
+        });
+
+      res.json({
+        callStrikes,
+        putStrikes,
+        expiryDates: sortedExpiryDates, // Send the sorted expiry dates
+      });
+    })
+    .on("error", (error) => {
+      console.error("Error processing CSV file:", error); // Log any errors
+      res.status(500).json({ message: "Failed to process CSV file" });
+    });
+});
 
 // All Dhan API Endpoints
 // Send Dhan API credentials
