@@ -501,45 +501,6 @@ app.post("/dhanPlaceOrder", async (req, res) => {
   }
 });
 
-// Broker Dhan - Endpoint for Kill Switch
-app.post("/killSwitch", async (req, res) => {
-  const killSwitchStatus = req.query.killSwitchStatus; // Get from query parameters
-
-  console.log("Received killSwitchStatus:", killSwitchStatus); // Log the received status
-
-  if (!["ACTIVATE", "DEACTIVATE"].includes(killSwitchStatus)) {
-    return res.status(400).json({
-      message:
-        'Invalid killSwitchStatus value. Must be either "ACTIVATE" or "DEACTIVATE".',
-    });
-  }
-
-  const options = {
-    method: "POST",
-    url: "https://api.dhan.co/killSwitch",
-    headers: {
-      "access-token": process.env.DHAN_API_TOKEN,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    params: {
-      // Send as query parameters to the Dhan API
-      killSwitchStatus,
-    },
-  };
-
-  try {
-    const response = await axios(options);
-    res.json(response.data);
-  } catch (error) {
-    console.error("Failed to activate Kill Switch:", error);
-    res.status(500).json({
-      message: "Failed to activate Kill Switch",
-      error: error.response.data,
-    });
-  }
-});
-
 // Broker Dhan - Route to get orders
 app.get("/dhanGetOrders", async (req, res) => {
   const dhanApiToken = req.query.DHAN_API_TOKEN;
