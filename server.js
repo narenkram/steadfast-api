@@ -69,19 +69,25 @@ app.get("/api/flattrade-credentials", (req, res) => {
 
 // At the top of your file, add this to store the credentials
 let storedCredentials = {
-  usersession: '',
-  userid: '',
-  defaultCallSecurityId: '',
-  defaultPutSecurityId: ''
+  usersession: "",
+  userid: "",
+  defaultCallSecurityId: "",
+  defaultPutSecurityId: "",
 };
 // Update the POST endpoint to store the credentials and security IDs
 app.post("/api/set-flattrade-credentials", (req, res) => {
   console.log("Received POST request to set credentials and security IDs");
-  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } = req.body;
-  
+  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } =
+    req.body;
+
   // Store the credentials and security IDs
-  storedCredentials = { usersession, userid, defaultCallSecurityId, defaultPutSecurityId };
-  
+  storedCredentials = {
+    usersession,
+    userid,
+    defaultCallSecurityId,
+    defaultPutSecurityId,
+  };
+
   console.log("Updated credentials and security IDs:", storedCredentials);
   res.json({ message: "Credentials and security IDs updated successfully" });
 });
@@ -95,7 +101,7 @@ app.get("/flattrade-websocket-data", (req, res) => {
     usersession: storedCredentials.usersession,
     userid: storedCredentials.userid,
     defaultCallSecurityId: storedCredentials.defaultCallSecurityId,
-    defaultPutSecurityId: storedCredentials.defaultPutSecurityId
+    defaultPutSecurityId: storedCredentials.defaultPutSecurityId,
   };
 
   console.log("Sending websocket data:", websocketData);
