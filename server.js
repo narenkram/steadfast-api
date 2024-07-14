@@ -4,6 +4,7 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 const axios = require("axios");
 const fs = require("fs");
 const csv = require("fast-csv");
+const unzipper = require("unzipper");
 const path = require("path");
 const bodyParser = require("body-parser");
 const { parse, isBefore } = require("date-fns"); // Add this line to import date-fns for date parsing and comparison
@@ -373,61 +374,74 @@ app.get("/shoonyaSymbols", (req, res) => {
   const putStrikes = [];
   const expiryDates = new Set();
 
-  const csvFilePath =
+  const zipFilePath =
     exchangeSymbol === "BFO"
-      ? "./Bfo_Index_Derivatives.csv"
-      : "./Nfo_Index_Derivatives.csv";
+      ? "./BFO_symbols.txt.zip"
+      : "./NFO_symbols.txt.zip";
 
-  fs.createReadStream(csvFilePath)
-    .pipe(csv.parse({ headers: true }))
-    .on("data", (row) => {
-      if (
-        row["Symbol"] === masterSymbol &&
-        row["Exchange"] === exchangeSymbol
-      ) {
-        const strikeData = {
-          tradingSymbol: row["Tradingsymbol"],
-          securityId: row["Token"],
-          expiryDate: row["Expiry"], // Send expiry date without parsing or formatting
-          strikePrice: row["Strike"],
-        };
-        if (row["Optiontype"] === "CE") {
-          callStrikes.push(strikeData);
-        } else if (row["Optiontype"] === "PE") {
-          putStrikes.push(strikeData);
-        }
-        expiryDates.add(row["Expiry"]);
+  console.log(`Reading file: ${zipFilePath}`);
+
+  fs.createReadStream(zipFilePath)
+    .pipe(unzipper.Parse())
+    .on("entry", (entry) => {
+      const fileName = entry.path;
+      if (fileName.endsWith(".txt")) {
+        entry
+          .pipe(csv.parse({ headers: true, delimiter: "," }))
+          .on("data", (row) => {
+            if (
+              row["Symbol"] === masterSymbol &&
+              row["Exchange"] === exchangeSymbol
+            ) {
+              const strikeData = {
+                tradingSymbol: row["TradingSymbol"],
+                securityId: row["Token"],
+                expiryDate: row["Expiry"],
+                strikePrice: row["StrikePrice"],
+              };
+              if (row["OptionType"] === "CE") {
+                callStrikes.push(strikeData);
+              } else if (row["OptionType"] === "PE") {
+                putStrikes.push(strikeData);
+              }
+              expiryDates.add(row["Expiry"]);
+            }
+          })
+          .on("end", () => {
+            console.log("Finished processing file");
+            console.log(`Call Strikes: ${callStrikes.length}`);
+            console.log(`Put Strikes: ${putStrikes.length}`);
+            console.log(`Expiry Dates: ${expiryDates.size}`);
+
+            const today = new Date();
+            const sortedExpiryDates = Array.from(expiryDates)
+              .filter(
+                (dateStr) =>
+                  !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today) ||
+                  parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() ===
+                    today.toDateString()
+              )
+              .sort((a, b) => {
+                const dateA = parse(a, "dd-MMM-yyyy", new Date());
+                const dateB = parse(b, "dd-MMM-yyyy", new Date());
+                return dateA - dateB;
+              });
+
+            res.json({
+              callStrikes,
+              putStrikes,
+              expiryDates: sortedExpiryDates,
+            });
+          });
+      } else {
+        entry.autodrain();
       }
     })
-    .on("end", () => {
-      console.log("Call Strikes:", callStrikes); // Log the callStrikes array
-      console.log("Put Strikes:", putStrikes); // Log the putStrikes array
-      console.log("Expiry Dates:", Array.from(expiryDates)); // Log the expiryDates set
-
-      // Filter out past dates and sort the remaining expiry dates
-      const today = new Date();
-      const sortedExpiryDates = Array.from(expiryDates)
-        .filter(
-          (dateStr) =>
-            !isBefore(parse(dateStr, "dd-MMM-yyyy", new Date()), today) ||
-            parse(dateStr, "dd-MMM-yyyy", new Date()).toDateString() ===
-              today.toDateString()
-        )
-        .sort((a, b) => {
-          const dateA = parse(a, "dd-MMM-yyyy", new Date());
-          const dateB = parse(b, "dd-MMM-yyyy", new Date());
-          return dateA - dateB;
-        });
-
-      res.json({
-        callStrikes,
-        putStrikes,
-        expiryDates: sortedExpiryDates, // Send the sorted expiry dates
-      });
-    })
     .on("error", (error) => {
-      console.error("Error processing CSV file:", error); // Log any errors
-      res.status(500).json({ message: "Failed to process CSV file" });
+      console.error(`Error processing zip file ${zipFilePath}:`, error);
+      res
+        .status(500)
+        .json({ message: "Failed to process zip file", error: error.message });
     });
 });
 // Broker Shoonya - Route to place an order to include securityId from the request

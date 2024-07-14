@@ -31,4 +31,4 @@ coverage
 
 *.tsbuildinfo
 
-*.csv#
+!*.csv
