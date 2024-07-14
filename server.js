@@ -439,6 +439,138 @@ app.get("/shoonyaSymbols", (req, res) => {
       res.status(500).json({ message: "Failed to process CSV file" });
     });
 });
+// Broker Shoonya - Route to place an order to include securityId from the request
+app.post("/shoonyaPlaceOrder", async (req, res) => {
+  const { uid, actid, exch, tsym, qty, prc, prd, trantype, prctyp, ret } =
+    req.body;
+
+  const jKey = req.headers.authorization?.split(" ")[1];
+
+  if (!jKey) {
+    return res
+      .status(400)
+      .json({ message: "Token is missing. Please generate a token first." });
+  }
+
+  const jData = JSON.stringify({
+    uid,
+    actid,
+    exch,
+    tsym,
+    qty,
+    prc,
+    prd,
+    trantype,
+    prctyp,
+    ret,
+  });
+
+  // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
+  const payload = `jKey=${jKey}&jData=${jData}`;
+
+  try {
+    const response = await axios.post(
+      "https://api.shoonya.com/NorenWClientTP/PlaceOrder",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error placing order:", error);
+    res
+      .status(500)
+      .json({ message: "Error placing order", error: error.message });
+  }
+});
+// Broker Shoonya - Get Orders and Trades
+app.get("/shoonyaGetOrdersAndTrades", async (req, res) => {
+  const jKey = req.query.SHOONYA_API_TOKEN;
+  const clientId = req.query.SHOONYA_CLIENT_ID;
+
+  if (!jKey || !clientId) {
+    return res.status(400).json({ message: "Token or Client ID is missing." });
+  }
+
+  const orderBookPayload = `jKey=${jKey}&jData=${JSON.stringify({
+    uid: clientId,
+    prd: "M",
+  })}`;
+  const tradeBookPayload = `jKey=${jKey}&jData=${JSON.stringify({
+    uid: clientId,
+    actid: clientId,
+  })}`;
+
+  try {
+    // Fetch Order Book
+    const orderBookRes = await axios.post(
+      "https://api.shoonya.com/NorenWClientTP/OrderBook",
+      orderBookPayload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    // Fetch Trade Book
+    const tradeBookRes = await axios.post(
+      "https://api.shoonya.com/NorenWClientTP/TradeBook",
+      tradeBookPayload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    res.json({
+      orderBook: orderBookRes.data,
+      tradeBook: tradeBookRes.data,
+    });
+  } catch (error) {
+    console.error("Error fetching orders and trades:", error);
+    res.status(500).json({
+      message: "Error fetching orders and trades",
+      error: error.message,
+    });
+  }
+});
+// Broker Shoonya - Route to cancel an order
+app.post("/shoonyaCancelOrder", async (req, res) => {
+  const { norenordno, uid } = req.body;
+  const jKey = req.query.SHOONYA_API_TOKEN;
+
+  if (!jKey) {
+    return res
+      .status(400)
+      .json({ message: "Token is missing. Please generate a token first." });
+  }
+
+  const jData = JSON.stringify({ norenordno, uid });
+  const payload = `jKey=${jKey}&jData=${jData}`;
+
+  try {
+    const response = await axios.post(
+      "https://api.shoonya.com/NorenWClientTP/CancelOrder",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res
+      .status(500)
+      .json({ message: "Error cancelling order", error: error.message });
+  }
+});
 
 // All Dhan API Endpoints
 // Send Dhan API credentials
