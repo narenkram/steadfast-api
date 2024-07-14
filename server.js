@@ -369,17 +369,27 @@ app.post("/shoonyaFundLimit", async (req, res) => {
 });
 // Broker Shoonya - Get Symbols
 app.get("/shoonyaSymbols", (req, res) => {
+  const bfoSymbolMapping = {
+    SENSEX: "BSXOPT",
+    BANKEX: "BKXOPT",
+    SENSEX50: "SX50OPT",
+  };
+
   const { exchangeSymbol, masterSymbol } = req.query;
   const callStrikes = [];
   const putStrikes = [];
   const expiryDates = new Set();
 
-  const zipFilePath =
-    exchangeSymbol === "BFO"
-      ? "./BFO_symbols.txt.zip"
-      : "./NFO_symbols.txt.zip";
-
-  console.log(`Reading file: ${zipFilePath}`);
+  let zipFilePath;
+  if (exchangeSymbol === "BFO") {
+    zipFilePath = path.join(__dirname, "BFO_symbols.txt.zip");
+  } else if (exchangeSymbol === "NFO") {
+    zipFilePath = path.join(__dirname, "NFO_symbols.txt.zip");
+  } else {
+    return res
+      .status(400)
+      .json({ message: "Invalid exchangeSymbol. Must be 'BFO' or 'NFO'." });
+  }
 
   fs.createReadStream(zipFilePath)
     .pipe(unzipper.Parse())
@@ -389,10 +399,16 @@ app.get("/shoonyaSymbols", (req, res) => {
         entry
           .pipe(csv.parse({ headers: true, delimiter: "," }))
           .on("data", (row) => {
-            if (
-              row["Symbol"] === masterSymbol &&
-              row["Exchange"] === exchangeSymbol
-            ) {
+            let symbolMatches;
+            if (exchangeSymbol === "BFO") {
+              const mappedSymbol =
+                bfoSymbolMapping[masterSymbol] || masterSymbol;
+              symbolMatches = row["Symbol"].startsWith(mappedSymbol);
+            } else {
+              symbolMatches = row["Symbol"] === masterSymbol;
+            }
+
+            if (row["Exchange"] === exchangeSymbol && symbolMatches) {
               const strikeData = {
                 tradingSymbol: row["TradingSymbol"],
                 securityId: row["Token"],
