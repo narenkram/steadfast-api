@@ -35,15 +35,6 @@ app.get("/brokers", (req, res) => {
 });
 
 // All Flattrade API Endpoints
-// Send Credentials for Manage Brokers
-app.get("/api/flattrade-credentials", (req, res) => {
-  res.json({
-    apiKey: FLATTRADE_API_KEY,
-    apiSecret: FLATTRADE_API_SECRET,
-    clientId: FLATTRADE_CLIENT_ID,
-  });
-});
-
 // At the top of your file, add this to store the credentials
 let storedCredentials = {
   usersession: "",
