@@ -35,13 +35,20 @@ app.get("/brokers", (req, res) => {
   res.json(brokers);
 });
 
-// All Flattrade API Endpoints
 // At the top of your file, add this to store the credentials
 let storedCredentials = {
-  usersession: "",
-  userid: "",
-  defaultCallSecurityId: "",
-  defaultPutSecurityId: "",
+  flattrade: {
+    usersession: "",
+    userid: "",
+    defaultCallSecurityId: "",
+    defaultPutSecurityId: "",
+  },
+  shoonya: {
+    usersession: "",
+    userid: "",
+    defaultCallSecurityId: "",
+    defaultPutSecurityId: "",
+  },
 };
 // Update the POST endpoint to store the credentials and security IDs
 app.post("/api/set-flattrade-credentials", (req, res) => {
@@ -60,7 +67,30 @@ app.post("/api/set-flattrade-credentials", (req, res) => {
   console.log("Updated credentials and security IDs:", storedCredentials);
   res.json({ message: "Credentials and security IDs updated successfully" });
 });
+// Add a new POST endpoint to set Shoonya credentials
+app.post("/api/set-shoonya-credentials", (req, res) => {
+  console.log(
+    "Received POST request to set Shoonya credentials and security IDs"
+  );
+  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } =
+    req.body;
 
+  // Store the Shoonya credentials and security IDs
+  storedCredentials.shoonya = {
+    usersession,
+    userid,
+    defaultCallSecurityId,
+    defaultPutSecurityId,
+  };
+
+  console.log(
+    "Updated Shoonya credentials and security IDs:",
+    storedCredentials.shoonya
+  );
+  res.json({
+    message: "Shoonya credentials and security IDs updated successfully",
+  });
+});
 // Update the GET endpoint to use the stored credentials and security IDs
 app.get("/flattrade-websocket-data", (req, res) => {
   console.log("Received GET request for flattrade websocket data");
@@ -77,7 +107,24 @@ app.get("/flattrade-websocket-data", (req, res) => {
 
   res.json(websocketData);
 });
+// Add a new GET endpoint to retrieve Shoonya websocket data
+app.get("/shoonya-websocket-data", (req, res) => {
+  console.log("Received GET request for Shoonya websocket data");
 
+  // Use the stored Shoonya credentials and security IDs
+  const websocketData = {
+    usersession: storedCredentials.shoonya.usersession,
+    userid: storedCredentials.shoonya.userid,
+    defaultCallSecurityId: storedCredentials.shoonya.defaultCallSecurityId,
+    defaultPutSecurityId: storedCredentials.shoonya.defaultPutSecurityId,
+  };
+
+  console.log("Sending Shoonya websocket data:", websocketData);
+
+  res.json(websocketData);
+});
+
+// All Flattrade API Endpoints
 // Broker Flattrade - Proxy configuration for Flattrade API
 app.use(
   "/flattradeApi",
