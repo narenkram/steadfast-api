@@ -49,6 +49,15 @@ let storedCredentials = {
     defaultCallSecurityId: "",
     defaultPutSecurityId: "",
   },
+  dhan: {
+    // Add this block for Dhan credentials
+    accessToken: "",
+    clientId: "",
+    instruments: "",
+    subscription_code: "",
+    defaultCallSecurityId: "",
+    defaultPutSecurityId: "",
+  },
 };
 // Update the POST endpoint to store the credentials and security IDs
 app.post("/api/set-flattrade-credentials", (req, res) => {
@@ -91,6 +100,26 @@ app.post("/api/set-shoonya-credentials", (req, res) => {
     message: "Shoonya credentials and security IDs updated successfully",
   });
 });
+// Add a new POST endpoint to set Dhan credentials
+app.post("/api/set-dhan-credentials", (req, res) => {
+  console.log("Received POST request to set Dhan credentials");
+  const { accessToken, clientId, instruments, subscription_code } = req.body;
+
+  // Store the Dhan credentials
+  storedCredentials.dhan = {
+    accessToken,
+    clientId,
+    instruments, // Add instruments
+    subscription_code, // Add subscription_code
+    defaultCallSecurityId,
+    defaultPutSecurityId,
+  };
+
+  console.log("Updated Dhan credentials:", storedCredentials.dhan);
+  res.json({
+    message: "Dhan credentials updated successfully",
+  });
+});
 // Update the GET endpoint to use the stored credentials and security IDs
 app.get("/flattrade-websocket-data", (req, res) => {
   console.log("Received GET request for flattrade websocket data");
@@ -120,6 +149,24 @@ app.get("/shoonya-websocket-data", (req, res) => {
   };
 
   console.log("Sending Shoonya websocket data:", websocketData);
+
+  res.json(websocketData);
+});
+// Add a new GET endpoint to retrieve Dhan websocket data
+app.get("/dhan-websocket-data", (req, res) => {
+  console.log("Received GET request for Dhan websocket data");
+
+  // Use the stored Shoonya credentials and security IDs
+  const websocketData = {
+    accessToken: storedCredentials.dhan.accessToken,
+    clientId: storedCredentials.dhan.clientId,
+    instruments: storedCredentials.dhan.instruments,
+    subscription_code: storedCredentials.dhan.subscription_code,
+    defaultCallSecurityId: storedCredentials.dhan.defaultCallSecurityId,
+    defaultPutSecurityId: storedCredentials.dhan.defaultPutSecurityId,
+  };
+
+  console.log("Sending Dhan websocket data:", websocketData);
 
   res.json(websocketData);
 });
