@@ -1,20 +1,20 @@
-# Steadfast Stoic API
+# Steadfast API
 
-To run the backend API server, navigate to the steadfast-stoic-api directory and use the following commands:
+To run the backend API server, navigate to the steadfast-api directory and use the following commands:
 
 ```bash
-cd steadfast-stoic-app
+cd steadfast-api
 npm install
 node server.js
 ```
 
 The application will be available at http://localhost:3000.
 
-[Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
+[Link to monorepo](https://github.com/narenkram/steadfast-monorepo)
 
 # Join Our Telegram Channel
 
-Stay updated by joining our [Telegram Channel](https://t.me/steadfaststoic).
+Stay updated by joining our [Telegram Channel](https://t.me/steadfastapp).
 
 ## Scrip Links
 
