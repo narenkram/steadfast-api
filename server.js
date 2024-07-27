@@ -220,7 +220,7 @@ app.post("/flattradeFundLimit", async (req, res) => {
 });
 // Broker Flattrade - Route to place an order to include securityId from the request
 app.post("/flattradePlaceOrder", async (req, res) => {
-  const { uid, actid, exch, tsym, qty, prc, prd, trantype, prctyp, ret } =
+  const { uid, actid, exch, tsym, qty, prc, trgprc, prd, trantype, prctyp, ret } =
     req.body;
 
   const jKey = req.headers.authorization?.split(" ")[1];
@@ -239,6 +239,7 @@ app.post("/flattradePlaceOrder", async (req, res) => {
     qty,
     prc,
     prd,
+    trgprc,
     trantype,
     prctyp,
     ret,
@@ -556,7 +557,7 @@ app.get("/shoonyaSymbols", (req, res) => {
 });
 // Broker Shoonya - Route to place an order to include securityId from the request
 app.post("/shoonyaPlaceOrder", async (req, res) => {
-  const { uid, actid, exch, tsym, qty, prc, prd, trantype, prctyp, ret } =
+  const { uid, actid, exch, tsym, qty, prc, trgprc, prd, trantype, prctyp, ret } =
     req.body;
 
   const jKey = req.headers.authorization?.split(" ")[1];
@@ -574,6 +575,7 @@ app.post("/shoonyaPlaceOrder", async (req, res) => {
     tsym,
     qty,
     prc,
+    trgprc,
     prd,
     trantype,
     prctyp,
@@ -820,6 +822,7 @@ app.post("/dhanPlaceOrder", async (req, res) => {
     securityId,
     quantity,
     price,
+    triggerPrice,
     drvExpiryDate,
     drvOptionType,
   } = req.body;
@@ -843,6 +846,7 @@ app.post("/dhanPlaceOrder", async (req, res) => {
       securityId,
       quantity,
       price,
+      triggerPrice,
       drvExpiryDate,
       drvOptionType,
     },
