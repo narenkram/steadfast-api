@@ -53,10 +53,6 @@ let storedCredentials = {
     // Add this block for Dhan credentials
     accessToken: "",
     clientId: "",
-    instruments: "",
-    subscription_code: "",
-    defaultCallSecurityId: "",
-    defaultPutSecurityId: "",
   },
 };
 // Update the POST endpoint to store the credentials and security IDs
@@ -103,16 +99,12 @@ app.post("/api/set-shoonya-credentials", (req, res) => {
 // Add a new POST endpoint to set Dhan credentials
 app.post("/api/set-dhan-credentials", (req, res) => {
   console.log("Received POST request to set Dhan credentials");
-  const { accessToken, clientId, instruments, subscription_code } = req.body;
+  const { accessToken, clientId } = req.body;
 
   // Store the Dhan credentials
   storedCredentials.dhan = {
     accessToken,
     clientId,
-    instruments, // Add instruments
-    subscription_code, // Add subscription_code
-    defaultCallSecurityId,
-    defaultPutSecurityId,
   };
 
   console.log("Updated Dhan credentials:", storedCredentials.dhan);
@@ -160,10 +152,6 @@ app.get("/dhan-websocket-data", (req, res) => {
   const websocketData = {
     accessToken: storedCredentials.dhan.accessToken,
     clientId: storedCredentials.dhan.clientId,
-    instruments: storedCredentials.dhan.instruments,
-    subscription_code: storedCredentials.dhan.subscription_code,
-    defaultCallSecurityId: storedCredentials.dhan.defaultCallSecurityId,
-    defaultPutSecurityId: storedCredentials.dhan.defaultPutSecurityId,
   };
 
   console.log("Sending Dhan websocket data:", websocketData);
