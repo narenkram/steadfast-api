@@ -96,7 +96,7 @@ app.post("/api/set-shoonya-credentials", (req, res) => {
     message: "Shoonya credentials and security IDs updated successfully",
   });
 });
-// Add a new POST endpoint to set Dhan credentials
+// Endpoint to set Dhan credentials
 app.post("/api/set-dhan-credentials", (req, res) => {
   console.log("Received POST request to set Dhan credentials");
   const { accessToken, clientId } = req.body;
@@ -107,10 +107,8 @@ app.post("/api/set-dhan-credentials", (req, res) => {
     clientId,
   };
 
-  console.log("Updated Dhan credentials:", storedCredentials.dhan);
-  res.json({
-    message: "Dhan credentials updated successfully",
-  });
+  console.log("Stored Dhan credentials:", storedCredentials.dhan);
+  res.json({ message: "Dhan credentials updated successfully" });
 });
 // Update the GET endpoint to use the stored credentials and security IDs
 app.get("/flattrade-websocket-data", (req, res) => {
@@ -144,18 +142,16 @@ app.get("/shoonya-websocket-data", (req, res) => {
 
   res.json(websocketData);
 });
-// Add a new GET endpoint to retrieve Dhan websocket data
+// Endpoint to get Dhan websocket data
 app.get("/dhan-websocket-data", (req, res) => {
   console.log("Received GET request for Dhan websocket data");
 
-  // Use the stored Shoonya credentials and security IDs
   const websocketData = {
     accessToken: storedCredentials.dhan.accessToken,
     clientId: storedCredentials.dhan.clientId,
   };
 
-  console.log("Sending Dhan websocket data:", websocketData);
-
+  console.log("Sending websocket data:", websocketData);
   res.json(websocketData);
 });
 
