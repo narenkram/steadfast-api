@@ -50,9 +50,10 @@ let storedCredentials = {
     defaultPutSecurityId: "",
   },
   dhan: {
-    // Add this block for Dhan credentials
     accessToken: "",
     clientId: "",
+    dhanExchangeSegment: "", // Initialize as empty
+    dhanSecurityId: "",      // Initialize as empty
   },
 };
 // Update the POST endpoint to store the credentials and security IDs
@@ -99,17 +100,20 @@ app.post("/api/set-shoonya-credentials", (req, res) => {
 // Endpoint to set Dhan credentials
 app.post("/api/set-dhan-credentials", (req, res) => {
   console.log("Received POST request to set Dhan credentials");
-  const { accessToken, clientId } = req.body;
+  const { accessToken, clientId, dhanExchangeSegment, dhanSecurityId } = req.body;
 
   // Store the Dhan credentials
   storedCredentials.dhan = {
     accessToken,
     clientId,
+    dhanExchangeSegment, // Store as string
+    dhanSecurityId,      // Store as string
   };
 
   console.log("Stored Dhan credentials:", storedCredentials.dhan);
   res.json({ message: "Dhan credentials updated successfully" });
 });
+
 // Update the GET endpoint to use the stored credentials and security IDs
 app.get("/flattrade-websocket-data", (req, res) => {
   console.log("Received GET request for flattrade websocket data");
@@ -149,6 +153,8 @@ app.get("/dhan-websocket-data", (req, res) => {
   const websocketData = {
     accessToken: storedCredentials.dhan.accessToken,
     clientId: storedCredentials.dhan.clientId,
+    exchangeSegment: storedCredentials.dhan.dhanExchangeSegment, // Ensure this is set
+    securityId: storedCredentials.dhan.dhanSecurityId, // Ensure this is set
   };
 
   console.log("Sending websocket data:", websocketData);
