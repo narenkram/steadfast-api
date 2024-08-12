@@ -18,8 +18,10 @@ Stay updated by joining our [Telegram Channel](https://t.me/steadfastapp).
 
 ## Scrip Links
 
-[Download latest Dhan Scrip](https://images.dhan.co/api-data/api-scrip-master.csv)
-
 [Download latest Flattrade BFO Scrip](https://flattrade.s3.ap-south-1.amazonaws.com/scripmaster/Bfo_Index_Derivatives.csv)
 
 [Download latest Flattrade NFO Scrip](https://flattrade.s3.ap-south-1.amazonaws.com/scripmaster/Nfo_Index_Derivatives.csv)
+
+[Download latest Shoonya BFO Scrip](https://api.shoonya.com/BFO_symbols.txt.zip)
+
+[Download latest Shoonya NFO Scrip](https://api.shoonya.com/NFO_symbols.txt.zip)
