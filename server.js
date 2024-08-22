@@ -40,89 +40,70 @@ let storedCredentials = {
   flattrade: {
     usersession: "",
     userid: "",
-    defaultCallSecurityId: "",
-    defaultPutSecurityId: "",
   },
   shoonya: {
     usersession: "",
     userid: "",
-    defaultCallSecurityId: "",
-    defaultPutSecurityId: "",
   }
 };
-// Update the POST endpoint to store the credentials and security IDs
+// Update the POST endpoint to store the credentials
 app.post("/api/set-flattrade-credentials", (req, res) => {
-  console.log("Received POST request to set credentials and security IDs");
-  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } =
+  console.log("Received POST request to set credentials");
+  const { usersession, userid } =
     req.body;
 
-  // Store the credentials and security IDs
-  storedCredentials = {
+  // Store the credentials 
+  storedCredentials.flattrade = {
     usersession,
-    userid,
-    defaultCallSecurityId,
-    defaultPutSecurityId,
+    userid
   };
 
-  console.log("Updated credentials and security IDs:", storedCredentials);
-  res.json({ message: "Credentials and security IDs updated successfully" });
+  res.json({ message: "Flattrade Credentials updated successfully" });
+  console.log(`${new Date().toLocaleTimeString()}  Updated Flattrade credentials`);
 });
 // Add a new POST endpoint to set Shoonya credentials
 app.post("/api/set-shoonya-credentials", (req, res) => {
   console.log(
-    "Received POST request to set Shoonya credentials and security IDs"
+    "Received POST request to set Shoonya credentials"
   );
-  const { usersession, userid, defaultCallSecurityId, defaultPutSecurityId } =
+  const { usersession, userid } =
     req.body;
 
   // Store the Shoonya credentials and security IDs
   storedCredentials.shoonya = {
     usersession,
-    userid,
-    defaultCallSecurityId,
-    defaultPutSecurityId,
+    userid
   };
 
-  console.log(
-    "Updated Shoonya credentials and security IDs:",
-    storedCredentials.shoonya
-  );
-  res.json({
-    message: "Shoonya credentials and security IDs updated successfully",
-  });
+  res.json({ message: "Shoonya Credentials updated successfully" });
+  console.log(`${new Date().toLocaleTimeString()}  Updated Shoonya credentials`);
 });
 
-// Update the GET endpoint to use the stored credentials and security IDs
+// Update the GET endpoint to use the stored credentials
 app.get("/flattrade-websocket-data", (req, res) => {
-  console.log("Received GET request for flattrade websocket data");
+  // console.log("Received GET request for flattrade websocket data");
 
-  // Use the stored credentials and security IDs
+  // Use the stored credentials
   const websocketData = {
-    usersession: storedCredentials.usersession,
-    userid: storedCredentials.userid,
-    defaultCallSecurityId: storedCredentials.defaultCallSecurityId,
-    defaultPutSecurityId: storedCredentials.defaultPutSecurityId,
+    usersession: storedCredentials.flattrade.usersession,
+    userid: storedCredentials.flattrade.userid,
   };
 
-  console.log("Sending websocket data:", websocketData);
-
   res.json(websocketData);
+  console.log(`${new Date().toLocaleTimeString()}  Sending Flattrade websocket data`);
 });
 // Add a new GET endpoint to retrieve Shoonya websocket data
 app.get("/shoonya-websocket-data", (req, res) => {
-  console.log("Received GET request for Shoonya websocket data");
+  // console.log("Received GET request for Shoonya websocket data");
 
   // Use the stored Shoonya credentials and security IDs
   const websocketData = {
     usersession: storedCredentials.shoonya.usersession,
     userid: storedCredentials.shoonya.userid,
-    defaultCallSecurityId: storedCredentials.shoonya.defaultCallSecurityId,
-    defaultPutSecurityId: storedCredentials.shoonya.defaultPutSecurityId,
   };
 
-  console.log("Sending Shoonya websocket data:", websocketData);
-
   res.json(websocketData);
+  console.log("Sending Shoonya websocket data:");
 });
 // All Flattrade API Endpoints
 // Broker Flattrade - Proxy configuration for Flattrade API
@@ -165,10 +146,10 @@ app.post("/flattradeFundLimit", async (req, res) => {
     );
     res.json(response.data);
   } catch (error) {
-    console.error("Error fetching fund limits:", error);
     res
-      .status(500)
-      .json({ message: "Error fetching fund limits", error: error.message });
+    .status(500)
+    .json({ message: "Error fetching Flattrade fund limits", error: error.message });
+    console.error("Error fetching Flattrade fund limits:", error);
   }
 });
 // Broker Flattrade - Route to place an order to include securityId from the request
@@ -211,11 +192,12 @@ app.post("/flattradePlaceOrder", async (req, res) => {
       }
     );
     res.json(response.data);
+    console.log(`\nFlattrade Order Place details:`, { exch, tsym, qty, prc, prd, trantype, prctyp, ret }, response.data);
   } catch (error) {
-    console.error("Error placing order:", error);
     res
-      .status(500)
-      .json({ message: "Error placing order", error: error.message });
+    .status(500)
+    .json({ message: "Error placing Flattrade Place order", error: error.message });
+    console.error("Error placing Flattrade Place order:", error);
   }
 });
 // Broker Flattrade - Get Symbols
@@ -252,9 +234,10 @@ app.get("/flattradeSymbols", (req, res) => {
       }
     })
     .on("end", () => {
-      console.log("Call Strikes:", callStrikes); // Log the callStrikes array
-      console.log("Put Strikes:", putStrikes); // Log the putStrikes array
-      console.log("Expiry Dates:", Array.from(expiryDates)); // Log the expiryDates set
+      console.log("\nFinished processing file");
+      console.log(`Call Strikes: ${callStrikes.length}`);
+      console.log(`Put Strikes: ${putStrikes.length}`);
+      console.log(`Expiry Dates: ${expiryDates.size}`);
 
       // Filter out past dates and sort the remaining expiry dates
       const today = new Date();
@@ -278,8 +261,8 @@ app.get("/flattradeSymbols", (req, res) => {
       });
     })
     .on("error", (error) => {
-      console.error("Error processing CSV file:", error); // Log any errors
-      res.status(500).json({ message: "Failed to process CSV file" });
+      res.status(500).json({ message: "Failed to process Flattrade CSV file" });
+      console.error("Error processing Flattrade CSV file:", error);
     });
 });
 // Broker Flattrade - Get Orders and Trades
@@ -328,11 +311,11 @@ app.get("/flattradeGetOrdersAndTrades", async (req, res) => {
       tradeBook: tradeBookRes.data,
     });
   } catch (error) {
-    console.error("Error fetching orders and trades:", error);
     res.status(500).json({
-      message: "Error fetching orders and trades",
+      message: "Error fetching Flattrade orders and trades",
       error: error.message,
     });
+    console.error("Error fetching Flattrade orders and trades:", error);
   }
 });
 // Broker Flattrade - Route to cancel an order
@@ -360,11 +343,12 @@ app.post("/flattradeCancelOrder", async (req, res) => {
       }
     );
     res.json(response.data);
+    console.log(`\n Flattrade Cancel Order:`, { norenordno }, response.data);
   } catch (error) {
-    console.error("Error cancelling order:", error);
     res
-      .status(500)
-      .json({ message: "Error cancelling order", error: error.message });
+    .status(500)
+    .json({ message: "Error cancelling Flattrade order", error: error.message });
+    console.error("Error cancelling Flattrade order:", error);
   }
 });
 
@@ -408,10 +392,10 @@ app.post("/shoonyaFundLimit", async (req, res) => {
     );
     res.json(response.data);
   } catch (error) {
-    console.error("Error fetching fund limits:", error);
     res
-      .status(500)
-      .json({ message: "Error fetching fund limits", error: error.message });
+    .status(500)
+    .json({ message: "Error fetching Shoonya fund limits", error: error.message });
+    console.error("Error fetching Shoonya fund limits:", error);
   }
 });
 // Broker Shoonya - Get Symbols
@@ -471,7 +455,7 @@ app.get("/shoonyaSymbols", (req, res) => {
             }
           })
           .on("end", () => {
-            console.log("Finished processing file");
+            console.log("\nFinished processing file");
             console.log(`Call Strikes: ${callStrikes.length}`);
             console.log(`Put Strikes: ${putStrikes.length}`);
             console.log(`Expiry Dates: ${expiryDates.size}`);
@@ -501,10 +485,10 @@ app.get("/shoonyaSymbols", (req, res) => {
       }
     })
     .on("error", (error) => {
-      console.error(`Error processing zip file ${zipFilePath}:`, error);
       res
-        .status(500)
-        .json({ message: "Failed to process zip file", error: error.message });
+      .status(500)
+      .json({ message: "Failed to process Shoonya zip file", error: error.message });
+      console.error(`Error processing Shoonya zip file ${zipFilePath}:`, error);
     });
 });
 // Broker Shoonya - Route to place an order to include securityId from the request
@@ -547,11 +531,12 @@ app.post("/shoonyaPlaceOrder", async (req, res) => {
       }
     );
     res.json(response.data);
+    console.log(`\nFlattrade Order Place details:`, { exch, tsym, qty, prc, prd, trantype, prctyp, ret }, response.data);
   } catch (error) {
-    console.error("Error placing order:", error);
     res
-      .status(500)
-      .json({ message: "Error placing order", error: error.message });
+    .status(500)
+    .json({ message: "Error placing Shoonya Place order", error: error.message });
+    console.error("Error placing Shoonya Place order:", error);
   }
 });
 // Broker Shoonya - Get Orders and Trades
@@ -600,11 +585,11 @@ app.get("/shoonyaGetOrdersAndTrades", async (req, res) => {
       tradeBook: tradeBookRes.data,
     });
   } catch (error) {
-    console.error("Error fetching orders and trades:", error);
     res.status(500).json({
-      message: "Error fetching orders and trades",
+      message: "Error fetching Shoonya orders and trades",
       error: error.message,
     });
+    console.error("Error fetching Shoonya orders and trades:", error);
   }
 });
 // Broker Shoonya - Route to cancel an order
@@ -632,11 +617,12 @@ app.post("/shoonyaCancelOrder", async (req, res) => {
       }
     );
     res.json(response.data);
+    console.log(`\n Flattrade Cancel Order:`, { norenordno }, response.data);
   } catch (error) {
-    console.error("Error cancelling order:", error);
     res
-      .status(500)
-      .json({ message: "Error cancelling order", error: error.message });
+    .status(500)
+    .json({ message: "Error cancelling Shoonya order", error: error.message });
+    console.error("Error cancelling Shoonya order:", error);
   }
 });
 
