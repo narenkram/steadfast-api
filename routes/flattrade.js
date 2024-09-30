@@ -261,6 +261,48 @@ module.exports = (storedCredentials) => {
         }
     });
 
+	// ===> Get Flattrade Option Chain
+	router.post("/getOptionChain", async (req, res) => {
+	const jKey = req.headers.authorization?.split(" ")[1];
+	const { uid, exch, tsym, strprc, cnt } = req.body;
+
+	if (!jKey) {
+		return res
+		.status(400)
+		.json({ message: "Token is missing. Please generate a token first." });
+	}
+
+	const jData = JSON.stringify({
+		uid,
+		exch,
+		tsym,
+		strprc,
+		cnt,
+	});
+
+	const payload = `jKey=${jKey}&jData=${jData}`;
+
+	try {
+		const response = await axios.post(
+		"https://piconnect.flattrade.in/PiConnectTP/GetOptionChain",
+		payload,
+		{
+			headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+			},
+		}
+		);
+		res.json(response.data);
+		console.log(`\nFlattrade Get Option Chain details:`, response.data);
+	} catch (error) {
+		res.status(500).json({
+		message: "Error getting Flattrade option chain",
+		error: error.message,
+		});
+		console.error("Error getting Flattrade option chain:", error);
+	}
+	});
+
 
 //===> TRADING API CALLS <===
 
