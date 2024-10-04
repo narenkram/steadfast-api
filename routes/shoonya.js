@@ -289,6 +289,39 @@ module.exports = (storedCredentials) => {
         }
     });
 
+      // ===> Get Shoonya Option Greek
+    router.post("/getOptionGreek", async (req, res) => {
+        const jKey = req.headers.authorization?.split(" ")[1];
+        const { jData } = req.body;
+
+        if (!jKey) {
+        return res
+            .status(400)
+            .json({ message: "Token is missing. Please generate a token first." });
+        }
+
+        const payload = `jKey=${jKey}&jData=${jData}`;
+
+        try {
+        const response = await axios.post(
+            "https://api.shoonya.com/NorenWClientTP/GetOptionGreek",
+            payload,
+            {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            }
+        );
+        res.json(response.data);
+        console.log(`\nShoonya Get Option Greek details:`, response.data);
+        } catch (error) {
+        res.status(500).json({
+            message: "Error getting Shoonya option Greek",
+            error: error.message,
+        });
+        console.error("Error getting Shoonya option Greek:", error);
+        }
+    });
 
 // ===> TRADING API CALLS <===
     
