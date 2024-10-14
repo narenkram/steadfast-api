@@ -9,7 +9,8 @@ const virtualRoutes = require("./routes/virtual");
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+// Update the CORS configuration to allow connections from any origin
+app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,7 +30,8 @@ app.use("/virtual", virtualRoutes());
 app.get("/", (req, res) => res.send("Welcome to the Proxy Server"));
 
 const PORT = 3000;
-const HOST = "localhost";
+// Change HOST to '0.0.0.0' to allow connections from any IP address
+const HOST = "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
   console.log(`Server is running on http://${HOST}:${PORT}`);
