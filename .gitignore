@@ -34,3 +34,4 @@ coverage
 !*.csv
 !*.zip
 package-lock.json
+package-lock.json
