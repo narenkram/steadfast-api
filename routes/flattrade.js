@@ -25,6 +25,10 @@ module.exports = (storedCredentials) => {
     console.log("Received generateToken request");
     console.log("Request body:", req.body);
     try {
+      if (!req.body || Object.keys(req.body).length === 0) {
+        throw new Error("Empty request body");
+      }
+  
       const response = await axios.post(
         "https://authapi.flattrade.in/trade/apitoken",
         req.body,
@@ -40,8 +44,8 @@ module.exports = (storedCredentials) => {
       console.error("Error in generateToken:", error.message);
       console.error("Full error object:", error);
       res
-        .status(error.response?.status || 500)
-        .json(error.response?.data || { message: error.message });
+        .status(400)
+        .json({ message: "Error generating token", error: error.message });
     }
   });
   router.get("/test", (req, res) => {
