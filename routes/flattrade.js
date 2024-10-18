@@ -40,6 +40,9 @@ module.exports = (storedCredentials) => {
         .json(error.response?.data || { message: error.message });
     }
   });
+  router.get("/test", (req, res) => {
+    res.json({ message: "Flattrade router is working" });
+  });
 
   // ===> NON-TRADING API CALLS  <===
 
