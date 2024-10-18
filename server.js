@@ -9,7 +9,12 @@ const virtualRoutes = require("./routes/virtual");
 
 const app = express();
 
-app.use(cors({ origin: config.corsOrigin, credentials: true }));
+app.use(
+  cors({
+    origin: config.corsOrigin,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

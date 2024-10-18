@@ -15,4 +15,12 @@ const config = {
   },
 };
 
-module.exports = config[process.env.NODE_ENV || "development"];
+const environment = process.env.NODE_ENV || "development";
+const currentConfig = config[environment];
+
+// Ensure corsOrigin is always an array
+currentConfig.corsOrigin = Array.isArray(currentConfig.corsOrigin)
+  ? currentConfig.corsOrigin
+  : [currentConfig.corsOrigin];
+
+module.exports = currentConfig;
