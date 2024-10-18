@@ -22,6 +22,25 @@ module.exports = (storedCredentials) => {
     })
   );
 
+  router.post("/generateToken", async (req, res) => {
+    try {
+      const response = await axios.post(
+        "https://authapi.flattrade.in/trade/apitoken",
+        req.body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      res.json(response.data);
+    } catch (error) {
+      res
+        .status(error.response?.status || 500)
+        .json(error.response?.data || { message: error.message });
+    }
+  });
+
   // ===> NON-TRADING API CALLS  <===
 
   // ===> Endpoint to store the credentials
