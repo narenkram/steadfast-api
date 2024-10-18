@@ -41,8 +41,6 @@ if (process.env.NODE_ENV !== "production") {
   app.listen(config.port, config.host, () => {
     console.log(`Server is running on http://${config.host}:${config.port}`);
   });
-} else {
-  app.ready = () => Promise.resolve();
 }
 
 module.exports = app;
