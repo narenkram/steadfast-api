@@ -7,7 +7,7 @@ const config = {
   production: {
     port: process.env.PORT || 3000,
     host: "0.0.0.0",
-    corsOrigin: "https://steadfastapp.in",
+    corsOrigin: ["https://steadfastapp.in", "https://www.steadfastapp.in"],
   },
 };
 
