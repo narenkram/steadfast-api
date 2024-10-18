@@ -42,12 +42,12 @@ module.exports = (storedCredentials) => {
   });
   router.get("/test", (req, res) => {
     console.log("Test route accessed");
-    try {
-      res.json({ message: "Flattrade router is working" });
-    } catch (error) {
-      console.error("Error in test route:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+    res.status(200).json({ message: "Flattrade router is working" });
+  });
+
+  router.head("/test", (req, res) => {
+    console.log("Test route accessed (HEAD)");
+    res.status(200).end();
   });
 
   // ===> NON-TRADING API CALLS  <===
