@@ -23,4 +23,11 @@ currentConfig.corsOrigin = Array.isArray(currentConfig.corsOrigin)
   ? currentConfig.corsOrigin
   : [currentConfig.corsOrigin];
 
+// Add 'Access-Control-Allow-Origin' header to the response
+currentConfig.corsHeaders = {
+  "Access-Control-Allow-Origin": currentConfig.corsOrigin,
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 module.exports = currentConfig;

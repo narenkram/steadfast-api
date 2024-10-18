@@ -9,20 +9,8 @@ const virtualRoutes = require("./routes/virtual");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (config.corsOrigin.indexOf(origin) !== -1 || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
+app.use(cors(config.corsHeaders));
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
