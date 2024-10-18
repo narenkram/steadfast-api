@@ -9,16 +9,7 @@ const virtualRoutes = require("./routes/virtual");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      // {{ edit_1: Update CORS configuration }}
-      "http://localhost:5173", // Allow your development origin
-      "https://steadfastapp.in", // Allow your production origin
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
