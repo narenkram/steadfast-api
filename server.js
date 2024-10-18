@@ -28,6 +28,11 @@ app.use("/virtual", virtualRoutes());
 
 app.get("/", (req, res) => res.send("Welcome to the Steadfast API"));
 
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
+
 if (process.env.NODE_ENV !== "production") {
   app.listen(config.port, config.host, () => {
     console.log(`Server is running on http://${config.host}:${config.port}`);
