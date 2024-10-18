@@ -29,8 +29,12 @@ app.use("/virtual", virtualRoutes());
 app.get("/", (req, res) => res.send("Welcome to the Steadfast API"));
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
+  console.error("Error details:", err);
+  console.error("Stack trace:", err.stack);
+  res.status(500).json({
+    message: "An error occurred on the server",
+    error: err.message,
+  });
 });
 
 if (process.env.NODE_ENV !== "production") {

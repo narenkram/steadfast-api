@@ -21,8 +21,9 @@ module.exports = (storedCredentials) => {
       },
     })
   );
-
   router.post("/generateToken", async (req, res) => {
+    console.log("Received generateToken request");
+    console.log("Request body:", req.body);
     try {
       const response = await axios.post(
         "https://authapi.flattrade.in/trade/apitoken",
@@ -33,8 +34,11 @@ module.exports = (storedCredentials) => {
           },
         }
       );
+      console.log("Flattrade API response:", response.data);
       res.json(response.data);
     } catch (error) {
+      console.error("Error in generateToken:", error.message);
+      console.error("Full error object:", error);
       res
         .status(error.response?.status || 500)
         .json(error.response?.data || { message: error.message });
