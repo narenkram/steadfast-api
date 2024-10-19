@@ -44,11 +44,13 @@ jobs:
             set -x
             cd /root/steadfast-api
             echo "Current directory: $(pwd)"
+            echo "Installing PM2 globally..."
+            npm install -g pm2
             echo "Stopping PM2 process..."
-            pm2 stop steadfast_api
+            pm2 stop steadfast_api || true
             echo "Running npm ci..."
-            npm ci
+            npm ci --no-audit
             echo "Starting PM2 process..."
-            pm2 start steadfast_api
+            pm2 start server.js --name steadfast_api
             echo "Deployment completed."
           '
