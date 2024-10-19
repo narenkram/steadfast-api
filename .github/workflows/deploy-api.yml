@@ -1,0 +1,43 @@
+name: Deploy Steadfast API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.18.0"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup SSH Agent
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SERVER_DEPLOY_KEY }}"
+          ssh-add -l -E sha256
+
+      - name: Deploy to server
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "Attempting to connect to ${USER}@${HOST}..."
+          ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
+          scp -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:/root/steadfast-api/
+          ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
+            cd /root/steadfast-api &&
+            npm ci &&
+            pm2 restart steadfast_api
+          '
