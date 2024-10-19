@@ -30,10 +30,18 @@ module.exports = (storedCredentials) => {
       if (!req.body || Object.keys(req.body).length === 0) {
         throw new Error("Empty request body");
       }
-  
+
+      const { jKey, jData } = req.body;
+
+      if (!jKey || !jData) {
+        throw new Error("jKey or jData is missing");
+      }
+
+      const payload = `jKey=${jKey}&jData=${jData}`;
+
       const response = await axios.post(
         "https://api.shoonya.com/NorenWClientTP/QuickAuth",
-        req.body,
+        payload,
         {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
