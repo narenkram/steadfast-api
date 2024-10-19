@@ -35,16 +35,18 @@ jobs:
         run: |
           echo "Attempting to connect to ${USER}@${HOST}..."
           ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
+
           echo "Copying files..."
-          scp -o StrictHostKeyChecking=no -v -r ./* ${USER}@${HOST}:/root/steadfast-api/
+          timeout 5m scp -o StrictHostKeyChecking=no -v -r ./* ${USER}@${HOST}:/root/steadfast-api/
+
           echo "Executing commands on server..."
           ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} '
             set -x
             cd /root/steadfast-api &&
             echo "Current directory: $(pwd)" &&
             echo "Running npm ci..." &&
-            npm ci &&
+            timeout 5m npm ci &&
             echo "Restarting PM2 process..." &&
-            pm2 restart steadfast_api &&
+            timeout 2m pm2 restart steadfast_api &&
             echo "Deployment completed."
           '
