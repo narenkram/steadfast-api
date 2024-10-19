@@ -44,8 +44,12 @@ jobs:
             set -x
             cd /root/steadfast-api
             echo "Current directory: $(pwd)"
-            echo "Installing PM2 globally..."
-            npm install -g pm2
+            if ! command -v pm2 &> /dev/null; then
+              echo "Installing PM2 globally..."
+              npm install -g pm2
+            else
+              echo "PM2 is already installed."
+            fi
             echo "Stopping PM2 process..."
             pm2 stop steadfast_api || true
             echo "Running npm ci..."
