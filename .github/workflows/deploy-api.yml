@@ -37,16 +37,18 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${USER}@${HOST} 'echo "SSH connection successful"'
 
           echo "Copying files..."
-          scp -o StrictHostKeyChecking=no -q -r ./* ${USER}@${HOST}:/root/steadfast-api/
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' ./ ${USER}@${HOST}:/root/steadfast-api/
 
           echo "Executing commands on server..."
           ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
             set -x
-            cd /root/steadfast-api &&
-            echo "Current directory: $(pwd)" &&
-            echo "Running npm ci..." &&
-            npm ci &&
-            echo "Restarting PM2 process..." &&
-            pm2 restart steadfast_api &&
+            cd /root/steadfast-api
+            echo "Current directory: $(pwd)"
+            echo "Stopping PM2 process..."
+            pm2 stop steadfast_api
+            echo "Running npm ci..."
+            npm ci
+            echo "Starting PM2 process..."
+            pm2 start steadfast_api
             echo "Deployment completed."
           '
