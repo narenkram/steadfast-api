@@ -34,19 +34,19 @@ jobs:
           USER: ${{ secrets.SERVER_USER }}
         run: |
           echo "Attempting to connect to ${USER}@${HOST}..."
-          ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
+          ssh -o StrictHostKeyChecking=no ${USER}@${HOST} 'echo "SSH connection successful"'
 
           echo "Copying files..."
-          timeout 5m scp -o StrictHostKeyChecking=no -v -r ./* ${USER}@${HOST}:/root/steadfast-api/
+          scp -o StrictHostKeyChecking=no -q -r ./* ${USER}@${HOST}:/root/steadfast-api/
 
           echo "Executing commands on server..."
-          ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} '
+          ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
             set -x
             cd /root/steadfast-api &&
             echo "Current directory: $(pwd)" &&
             echo "Running npm ci..." &&
-            timeout 5m npm ci &&
+            npm ci &&
             echo "Restarting PM2 process..." &&
-            timeout 2m pm2 restart steadfast_api &&
+            pm2 restart steadfast_api &&
             echo "Deployment completed."
           '
