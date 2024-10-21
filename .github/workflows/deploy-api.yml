@@ -50,11 +50,13 @@ jobs:
             else
               echo "PM2 is already installed."
             fi
-            echo "Stopping PM2 process..."
-            pm2 stop steadfast_api || true
-            echo "Running npm ci..."
-            npm ci --no-audit
-            echo "Starting PM2 process..."
-            pm2 start server.js --name steadfast_api
+            echo "Checking if PM2 process exists..."
+            if pm2 list | grep -q steadfast_api; then
+              echo "PM2 process exists. Restarting..."
+              pm2 restart steadfast_api
+            else
+              echo "PM2 process does not exist. Starting..."
+              pm2 start server.js --name steadfast_api
+            fi
             echo "Deployment completed."
           '
