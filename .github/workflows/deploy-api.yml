@@ -50,6 +50,29 @@ jobs:
             else
               echo "PM2 is already installed."
             fi
+
+            echo "Checking if steadfast_api service is running..."
+            if sudo systemctl is-active --quiet steadfast_api.service; then
+              echo "Service is running. Restarting..."
+              sudo systemctl restart steadfast_api.service
+            else
+              echo "Service is not running. Starting..."
+              sudo systemctl start steadfast_api.service
+            fi
+
+            echo "Reloading Supervisor configuration..."
+            sudo supervisorctl reread
+            sudo supervisorctl update
+
+            echo "Checking if steadfast_api process is running..."
+            if sudo supervisorctl status steadfast_api | grep -q "RUNNING"; then
+              echo "Process is running. Restarting..."
+              sudo supervisorctl restart steadfast_api
+            else
+              echo "Process is not running. Starting..."
+              sudo supervisorctl start steadfast_api
+            fi
+
             echo "Checking if PM2 process exists..."
             if pm2 list | grep -q steadfast_api; then
               echo "PM2 process exists. Restarting..."
@@ -58,5 +81,6 @@ jobs:
               echo "PM2 process does not exist. Starting..."
               pm2 start server.js --name steadfast_api
             fi
+
             echo "Deployment completed."
           '
