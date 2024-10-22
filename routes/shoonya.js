@@ -299,40 +299,6 @@ module.exports = (storedCredentials) => {
     }
   });
 
-  // ===> Get Shoonya Order Margin
-  router.post("/getOrderMargin", async (req, res) => {
-    const jKey = req.headers.authorization?.split(" ")[1];
-    const jData = req.body.jData;
-
-    if (!jKey) {
-      return res
-        .status(400)
-        .json({ message: "Token is missing. Please generate a token first." });
-    }
-
-    const payload = `jKey=${jKey}&jData=${jData}`;
-
-    try {
-      const response = await axios.post(
-        "https://api.shoonya.com/NorenWClientTP/GetOrderMargin",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
-      res.json(response.data);
-      console.log(`\nShoonya Get Order Margin details:`, response.data);
-    } catch (error) {
-      res.status(500).json({
-        message: "Error getting Shoonya order margin",
-        error: error.message,
-      });
-      console.error("Error getting Shoonya order margin:", error);
-    }
-  });
-
   // ===> Get Shoonya Option Greek
   router.post("/getOptionGreek", async (req, res) => {
     const jKey = req.headers.authorization?.split(" ")[1];

@@ -267,40 +267,6 @@ module.exports = (storedCredentials) => {
     }
   });
 
-  // ===> Get Flattrade Order Margin
-  router.post("/getOrderMargin", async (req, res) => {
-    const jKey = req.headers.authorization?.split(" ")[1];
-    const jData = req.body.jData;
-
-    if (!jKey) {
-      return res
-        .status(400)
-        .json({ message: "Token is missing. Please generate a token first." });
-    }
-
-    const payload = `jKey=${jKey}&jData=${jData}`;
-
-    try {
-      const response = await axios.post(
-        "https://piconnect.flattrade.in/PiConnectTP/GetOrderMargin",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
-      res.json(response.data);
-      console.log(`\nFlattrade Get Order Margin details:`, response.data);
-    } catch (error) {
-      res.status(500).json({
-        message: "Error getting Flattrade order margin",
-        error: error.message,
-      });
-      console.error("Error getting Flattrade order margin:", error);
-    }
-  });
-
   // ===> Get Flattrade Option Greek
   router.post("/getOptionGreek", async (req, res) => {
     const jKey = req.headers.authorization?.split(" ")[1];
