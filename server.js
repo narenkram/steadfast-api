@@ -24,8 +24,7 @@ let storedCredentials = {
 };
 
 let selectedBroker = "";
-const MIN_PORT = 5000;
-const MAX_PORT = 5010;
+const pythonServerPort = 5000; // Choose an available port
 
 app.set("case sensitive routing", false);
 app.use("/flattrade", flattradeRoutes(storedCredentials));
@@ -39,45 +38,25 @@ const BROKER_PORTS = {
   shoonya: 8766,
 };
 
-async function findAvailablePort(startPort, endPort) {
-  for (let port = startPort; port <= endPort; port++) {
-    try {
-      await new Promise((resolve, reject) => {
-        const server = net.createServer();
-        server.listen(port, () => {
-          server.once('close', () => resolve(port));
-          server.close();
-        });
-        server.on('error', reject);
-      });
-      return port;
-    } catch (err) {
-      // Port is not available, try the next one
-    }
-  }
-  throw new Error('No available ports found');
-}
-
-async function sendToPythonServer(message) {
-  const port = await findAvailablePort(MIN_PORT, MAX_PORT);
+function sendToPythonServer(message) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket();
-    client.connect(port, 'localhost', () => {
+    client.connect(pythonServerPort, "localhost", () => {
       client.write(JSON.stringify(message));
     });
 
-    client.on('data', (data) => {
-      console.log('Received:', data.toString());
+    client.on("data", (data) => {
+      console.log("Received:", data.toString());
       client.destroy();
       resolve(data.toString());
     });
 
-    client.on('close', () => {
-      console.log('Connection closed');
+    client.on("close", () => {
+      console.log("Connection closed");
     });
 
-    client.on('error', (err) => {
-      console.error('Connection error:', err);
+    client.on("error", (err) => {
+      console.error("Connection error:", err);
       reject(err);
     });
   });
@@ -90,14 +69,17 @@ app.post("/set-broker", async (req, res) => {
 
     try {
       // Send the broker selection to the Python server
-      await sendToPythonServer({ action: 'set_broker', broker: selectedBroker });
+      await sendToPythonServer({
+        action: "set_broker",
+        broker: selectedBroker,
+      });
 
       const port = BROKER_PORTS[broker];
       res.json({
         message: `Selected broker set to ${selectedBroker}, WebSocket running on port ${port}`,
       });
     } catch (error) {
-      console.error('Error sending broker selection:', error);
+      console.error("Error sending broker selection:", error);
       res.status(500).json({ message: "Error setting broker" });
     }
   } else {
