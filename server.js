@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const config = require("./config");
-const { spawn } = require("child_process");
+const net = require("net");
 
 const flattradeRoutes = require("./routes/flattrade");
 const shoonyaRoutes = require("./routes/shoonya");
@@ -24,7 +24,7 @@ let storedCredentials = {
 };
 
 let selectedBroker = "";
-let websocketProcess = null;
+const pythonServerPort = 5000; // Choose an available port
 
 app.set("case sensitive routing", false);
 app.use("/flattrade", flattradeRoutes(storedCredentials));
@@ -38,42 +38,50 @@ const BROKER_PORTS = {
   shoonya: 8766,
 };
 
-app.post("/set-broker", (req, res) => {
+function sendToPythonServer(message) {
+  return new Promise((resolve, reject) => {
+    const client = new net.Socket();
+    client.connect(pythonServerPort, "localhost", () => {
+      client.write(JSON.stringify(message));
+    });
+
+    client.on("data", (data) => {
+      console.log("Received:", data.toString());
+      client.destroy();
+      resolve(data.toString());
+    });
+
+    client.on("close", () => {
+      console.log("Connection closed");
+    });
+
+    client.on("error", (err) => {
+      console.error("Connection error:", err);
+      reject(err);
+    });
+  });
+}
+
+app.post("/set-broker", async (req, res) => {
   const { broker } = req.body;
   if (broker && (broker === "flattrade" || broker === "shoonya")) {
     selectedBroker = broker;
 
-    // Kill existing WebSocket process if it exists
-    if (websocketProcess) {
-      websocketProcess.kill();
+    try {
+      // Send the broker selection to the Python server
+      await sendToPythonServer({
+        action: "set_broker",
+        broker: selectedBroker,
+      });
+
+      const port = BROKER_PORTS[broker];
+      res.json({
+        message: `Selected broker set to ${selectedBroker}, WebSocket running on port ${port}`,
+      });
+    } catch (error) {
+      console.error("Error sending broker selection:", error);
+      res.status(500).json({ message: "Error setting broker" });
     }
-
-    const port = BROKER_PORTS[broker];
-
-    // Start new WebSocket process
-    websocketProcess = spawn("python", ["../steadfast-websocket/main.py"], {
-      env: {
-        ...process.env,
-        SELECTED_BROKER: selectedBroker,
-        WS_PORT: port.toString(),
-      },
-    });
-
-    websocketProcess.stdout.on("data", (data) => {
-      console.log(
-        `[${selectedBroker.toUpperCase()}] WebSocket output: ${data}`
-      );
-    });
-
-    websocketProcess.stderr.on("data", (data) => {
-      console.error(
-        `[${selectedBroker.toUpperCase()}] WebSocket error: ${data}`
-      );
-    });
-
-    res.json({
-      message: `Selected broker set to ${selectedBroker}, WebSocket running on port ${port}`,
-    });
   } else {
     res.status(400).json({ message: "Invalid broker selection" });
   }
