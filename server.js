@@ -7,6 +7,7 @@ const net = require("net");
 const flattradeRoutes = require("./routes/flattrade");
 const shoonyaRoutes = require("./routes/shoonya");
 const virtualRoutes = require("./routes/virtual");
+const fileUpdates = require('./routes/fileUpdates');
 
 const app = express();
 
@@ -99,5 +100,13 @@ app.use((err, req, res, next) => {
 app.listen(config.port, config.host, () => {
   console.log(`Server is running on http://${config.host}:${config.port}`);
 });
+
+// Code To Download Updated Instrument files everyday after 7am IST(1:30am UTC). 
+(async () => {
+    // Flattrade
+    await fileUpdates.checkAndUpdateFiles('flattrade');
+    // Shoonya
+    await fileUpdates.checkAndUpdateFiles('shoonya');
+})();
 
 module.exports = app;
