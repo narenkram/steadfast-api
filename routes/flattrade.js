@@ -5,7 +5,7 @@ const axios = require("axios");
 const NodeCache = require("node-cache");
 const fs = require("fs");
 const csv = require("fast-csv");
-const path = require("path");
+const qs = require("qs");
 const { parse, isBefore } = require("date-fns");
 
 const symbolCache = new NodeCache({ stdTTL: 4 * 60 * 60 });
@@ -305,9 +305,6 @@ module.exports = (storedCredentials) => {
 
   // ===> Place Flattrade Order
   router.post("/placeOrder", async (req, res) => {
-    const { uid, actid, exch, tsym, qty, prc, prd, trantype, prctyp, ret } =
-      req.body;
-
     const jKey = req.headers.authorization?.split(" ")[1];
 
     if (!jKey) {
@@ -316,21 +313,10 @@ module.exports = (storedCredentials) => {
         .json({ message: "Token is missing. Please generate a token first." });
     }
 
-    const jData = JSON.stringify({
-      uid,
-      actid,
-      exch,
-      tsym,
-      qty,
-      prc,
-      prd,
-      trantype,
-      prctyp,
-      ret,
-    });
+    const jData = qs.parse(req.body);
 
     // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
-    const payload = `jKey=${jKey}&jData=${jData}`;
+    const payload = `jKey=${jKey}&jData=${JSON.stringify(jData)}`;
 
     try {
       const response = await axios.post(
@@ -345,7 +331,7 @@ module.exports = (storedCredentials) => {
       res.json(response.data);
       console.log(
         `\nFlattrade Order Place details:`,
-        { exch, tsym, qty, prc, prd, trantype, prctyp, ret },
+        jData,
         response.data
       );
     } catch (error) {
