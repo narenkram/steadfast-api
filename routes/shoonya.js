@@ -346,7 +346,7 @@ module.exports = (storedCredentials) => {
         .json({ message: "Token is missing. Please generate a token first." });
     }
 
-    const jData = qs.parse(res.body);
+    const jData = qs.parse(req.body);
 
     // const payload = `jKey=${jKey}&jData=${encodeURIComponent(jData)}`; // Not sure if we need this version, so keep it.
     const payload = `jKey=${jKey}&jData=${JSON.stringify(jData)}`;
